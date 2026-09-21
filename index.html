@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Grocery List</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+    }
+  </script>
+  <style>
+    /* Prevents pull-to-refresh on mobile browsers for a app-like feel */
+    body {
+      overscroll-behavior-y: contain;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex justify-center">
+
+  <!-- Mobile Screen Container -->
+  <div id="tab-shopping" class="w-full max-w-md bg-white dark:bg-slate-900 min-h-screen flex flex-col justify-between p-4 shadow-xl select-none">
+    
+    <!-- Top Section: Header, Progress & Input -->
+    <div>
+      <!-- Header Bar -->
+      <div class="flex items-center justify-between mt-2 mb-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Grocery List</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Tap items to mark as completed</p>
+        </div>
+        <span id="shopProgress" class="text-xs font-semibold px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full">
+          0 / 0 done
+        </span>
+      </div>
+
+      <!-- Quick Add Input Form -->
+      <form onsubmit="event.preventDefault(); addShoppingItem();" class="flex gap-2 mb-5">
+        <input 
+          type="text" 
+          id="newShopItem" 
+          placeholder="Add item (e.g., Oat milk)..." 
+          onkeydown="if(event.key==='Enter') addShoppingItem()"
+          class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all"
+          autocomplete="off"
+          enterkeyhint="done"
+        >
+        <button 
+          type="button"
+          onclick="addShoppingItem()"
+          class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xl transition-all shadow-sm flex items-center justify-center min-w-[54px]"
+          aria-label="Add item"
+        >
+          ＋
+        </button>
+      </form>
+
+      <!-- Active & Completed Item List -->
+      <ul id="shoppingListContainer" class="space-y-2 mb-6">
+        <!-- List items rendered dynamically -->
+      </ul>
+    </div>
+
+    <!-- Bottom Actions (Thumb-Zone Optimization) -->
+    <div class="pt-4 pb-2 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+      <button 
+        onclick="clearCompletedItems()" 
+        class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98 text-center"
+      >
+        Clear Checked
+      </button>
+      <button 
+        onclick="clearAllItems()" 
+        class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98 text-center"
+      >
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    // State initialization with localStorage persistence
+    let shoppingList = JSON.parse(localStorage.getItem('grocery_items')) || [
+      { id: 1, text: 'Oat milk', done: false },
+      { id: 2, text: 'Avocados', done: true }
+    ];
+
+    function renderShoppingList() {
+      const container = document.getElementById('shoppingListContainer');
+      const progress = document.getElementById('shopProgress');
+      container.innerHTML = '';
+
+      if (shoppingList.length === 0) {
+        container.innerHTML = `
+          <li class="text-center py-12 text-slate-400 dark:text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-3xl">🛒</span>
+            <span>Your list is currently empty</span>
+          </li>`;
+        progress.innerText = '0 / 0 done';
+        return;
+      }
+
+      // Sort: Unchecked items remain at top, checked items move to bottom
+      const sortedList = [...shoppingList].sort((a, b) => a.done - b.done);
+
+      sortedList.forEach(item => {
+        const li = document.createElement('li');
+        li.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+          item.done 
+            ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/60 opacity-60' 
+            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm'
+        }`;
+
+        li.innerHTML = `
+          <label class="flex items-center gap-3 flex-1 cursor-pointer select-none min-h-[30px]">
+            <input 
+              type="checkbox" 
+              ${item.done ? 'checked' : ''} 
+              onchange="toggleItem(${item.id})"
+              class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+            >
+            <span class="text-base font-medium ${item.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}">
+              ${escapeHtml(item.text)}
+            </span>
+          </label>
+          <button 
+            onclick="deleteItem(${item.id})" 
+            class="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 active:scale-90 transition-transform"
+            aria-label="Delete item"
+          >
+            ✕
+          </button>
+        `;
+        container.appendChild(li);
+      });
+
+      const completedCount = shoppingList.filter(i => i.done).length;
+      progress.innerText = `${completedCount} / ${shoppingList.length} done`;
+      
+      // Save state
+      localStorage.setItem('grocery_items', JSON.stringify(shoppingList));
+    }
+
+    function addShoppingItem() {
+      const input = document.getElementById('newShopItem');
+      const value = input.value.trim();
+      if (!value) return;
+
+      shoppingList.push({
+        id: Date.now(),
+        text: value,
+        done: false
+      });
+
+      input.value = '';
+      renderShoppingList();
+    }
+
+    function toggleItem(id) {
+      shoppingList = shoppingList.map(item => 
+        item.id === id ? { ...item, done: !item.done } : item
+      );
+      renderShoppingList();
+    }
+
+    function deleteItem(id) {
+      shoppingList = shoppingList.filter(item => item.id !== id);
+      renderShoppingList();
+    }
+
+    function clearCompletedItems() {
+      shoppingList = shoppingList.filter(item => !item.done);
+      renderShoppingList();
+    }
+
+    function clearAllItems() {
+      if (confirm('Are you sure you want to clear the entire list?')) {
+        shoppingList = [];
+        renderShoppingList();
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      }[m]));
+    }
+
+    // Initial load
+    renderShoppingList();
+  </script>
+</body>
+</html>
