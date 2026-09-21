@@ -23,30 +23,60 @@
           <p id="driveStatus" class="text-xs text-slate-500 dark:text-slate-400">Drive status: Disconnected</p>
         </div>
         <button id="authBtn" onclick="handleAuthClick()" class="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors">
-          Sync Drive
+          Connect Drive
         </button>
       </div>
 
-      <!-- Quick Add Form -->
-      <form onsubmit="event.preventDefault(); addShoppingItem();" class="flex gap-2 mb-5">
+      <!-- Quick Add Form: Name, Price, Qty -->
+      <form onsubmit="event.preventDefault(); addShoppingItem();" class="flex flex-col gap-2 mb-5">
         <input 
           type="text" 
-          id="newShopItem" 
-          placeholder="Add item (e.g., Oat milk)..." 
-          onkeydown="if(event.key==='Enter') addShoppingItem()"
-          class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all"
+          id="newItemName" 
+          placeholder="Item (e.g. Milk)..." 
+          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
           autocomplete="off"
-          enterkeyhint="done"
+          disabled
         >
-        <button 
-          type="button"
-          onclick="addShoppingItem()"
-          class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xl transition-all shadow-sm flex items-center justify-center min-w-[54px]"
-          aria-label="Add item"
-        >
-          ＋
-        </button>
+        
+        <div class="flex gap-2">
+          <input 
+            type="number" 
+            id="newItemPrice" 
+            placeholder="Price" 
+            step="0.01" 
+            min="0"
+            class="w-1/2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+            autocomplete="off"
+            disabled
+          >
+          <input 
+            type="number" 
+            id="newItemQty" 
+            placeholder="Qty" 
+            value="1" 
+            min="1"
+            class="w-1/2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+            autocomplete="off"
+            disabled
+          >
+          <button 
+            type="button"
+            id="addBtn"
+            onclick="addShoppingItem()"
+            disabled
+            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xl transition-all shadow-sm flex items-center justify-center min-w-[54px] disabled:opacity-50"
+            aria-label="Add item"
+          >
+            ＋
+          </button>
+        </div>
       </form>
+
+      <!-- Total Price Header -->
+      <div class="flex items-center justify-between px-2 py-2 mb-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <span>Total Estimated:</span>
+        <span id="grandTotal" class="text-emerald-600 dark:text-emerald-400 font-bold">R0.00</span>
+      </div>
 
       <!-- Shopping List -->
       <ul id="shoppingListContainer" class="space-y-2 mb-6"></ul>
@@ -54,10 +84,10 @@
 
     <!-- Bottom Actions -->
     <div class="pt-4 pb-2 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-      <button onclick="clearCompletedItems()" class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98">
+      <button id="clearCheckedBtn" onclick="clearCompletedItems()" disabled class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98 disabled:opacity-50">
         Clear Checked
       </button>
-      <button onclick="clearAllItems()" class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98">
+      <button id="clearAllBtn" onclick="clearAllItems()" disabled class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98 disabled:opacity-50">
         Clear All
       </button>
     </div>
@@ -73,7 +103,7 @@
     let tokenClient;
     let accessToken = null;
     let driveFileId = null;
-    let shoppingList = JSON.parse(localStorage.getItem('grocery_items')) || [];
+    let shoppingList = [];
 
     // Initialize Google Auth Token Client
     window.onload = () => {
@@ -83,10 +113,14 @@
           client_id: CLIENT_ID,
           scope: SCOPES,
           callback: async (resp) => {
-            if (resp.error) return;
+            if (resp.error) {
+              document.getElementById('driveStatus').innerText = 'Drive: Connection Error';
+              return;
+            }
             accessToken = resp.access_token;
             document.getElementById('driveStatus').innerText = 'Drive: Connected 🟢';
             document.getElementById('authBtn').style.display = 'none';
+            enableInputs(true);
             await syncWithDrive();
           },
         });
@@ -94,16 +128,33 @@
     };
 
     function handleAuthClick() {
+      if (!navigator.onLine) {
+        alert('Internet connection required to access Google Drive.');
+        return;
+      }
       if (accessToken === null && tokenClient) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       }
     }
 
+    function enableInputs(enable) {
+      document.getElementById('newItemName').disabled = !enable;
+      document.getElementById('newItemPrice').disabled = !enable;
+      document.getElementById('newItemQty').disabled = !enable;
+      document.getElementById('addBtn').disabled = !enable;
+      document.getElementById('clearCheckedBtn').disabled = !enable;
+      document.getElementById('clearAllBtn').disabled = !enable;
+    }
+
     // Google Drive REST API Operations
     async function syncWithDrive() {
-      if (!accessToken) return;
+      if (!accessToken || !navigator.onLine) {
+        document.getElementById('driveStatus').innerText = 'Drive: Offline';
+        return;
+      }
 
       try {
+        document.getElementById('driveStatus').innerText = 'Drive: Loading... ⏳';
         const searchRes = await fetch(
           `https://www.googleapis.com/drive/v3/files?q=name='grocery-list.json' and trashed=false`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -124,14 +175,20 @@
         } else {
           await createDriveFile();
         }
+        document.getElementById('driveStatus').innerText = 'Drive: Connected 🟢';
       } catch (err) {
         console.error('Drive Sync Error:', err);
+        document.getElementById('driveStatus').innerText = 'Drive: Sync Error ⚠️';
       }
     }
 
     async function saveToDrive() {
-      if (!accessToken) return;
+      if (!accessToken || !navigator.onLine) {
+        alert('Cannot save: Internet connection or Drive sign-in required.');
+        return;
+      }
 
+      document.getElementById('driveStatus').innerText = 'Drive: Saving... ⏳';
       const fileData = JSON.stringify(shoppingList);
       
       if (!driveFileId) {
@@ -154,6 +211,7 @@
         document.getElementById('driveStatus').innerText = 'Drive: Saved ✓';
       } catch (err) {
         console.error('Save to Drive Error:', err);
+        document.getElementById('driveStatus').innerText = 'Drive: Save Error ⚠️';
       }
     }
 
@@ -175,7 +233,18 @@
     // Shopping List App Logic
     function renderShoppingList(shouldSaveToDrive = true) {
       const container = document.getElementById('shoppingListContainer');
+      const grandTotalEl = document.getElementById('grandTotal');
       container.innerHTML = '';
+
+      if (!accessToken) {
+        container.innerHTML = `
+          <li class="text-center py-12 text-slate-400 dark:text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-3xl">🔒</span>
+            <span>Connect to Google Drive to view your list</span>
+          </li>`;
+        grandTotalEl.innerText = 'R0.00';
+        return;
+      }
 
       if (shoppingList.length === 0) {
         container.innerHTML = `
@@ -183,12 +252,22 @@
             <span class="text-3xl">🛒</span>
             <span>Your list is currently empty</span>
           </li>`;
+        grandTotalEl.innerText = 'R0.00';
         return;
       }
 
+      let totalCost = 0;
       const sortedList = [...shoppingList].sort((a, b) => a.done - b.done);
 
       sortedList.forEach(item => {
+        const itemPrice = parseFloat(item.price) || 0;
+        const itemQty = parseInt(item.qty, 10) || 1;
+        const itemTotal = itemPrice * itemQty;
+        
+        if (!item.done) {
+          totalCost += itemTotal;
+        }
+
         const li = document.createElement('li');
         li.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
           item.done 
@@ -204,9 +283,14 @@
               onchange="toggleItem(${item.id})"
               class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
             >
-            <span class="text-base font-medium ${item.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}">
-              ${escapeHtml(item.text)}
-            </span>
+            <div class="flex flex-col">
+              <span class="text-base font-medium ${item.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}">
+                ${escapeHtml(item.text)}
+              </span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">
+                Qty: ${itemQty} ${itemPrice > 0 ? `| R${itemPrice.toFixed(2)} ea (R${itemTotal.toFixed(2)})` : ''}
+              </span>
+            </div>
           </label>
           <button 
             onclick="deleteItem(${item.id})" 
@@ -219,16 +303,34 @@
         container.appendChild(li);
       });
 
-      localStorage.setItem('grocery_items', JSON.stringify(shoppingList));
+      grandTotalEl.innerText = `R${totalCost.toFixed(2)}`;
+
       if (shouldSaveToDrive) saveToDrive();
     }
 
     function addShoppingItem() {
-      const input = document.getElementById('newShopItem');
-      const value = input.value.trim();
-      if (!value) return;
-      shoppingList.push({ id: Date.now(), text: value, done: false });
-      input.value = '';
+      const nameInput = document.getElementById('newItemName');
+      const priceInput = document.getElementById('newItemPrice');
+      const qtyInput = document.getElementById('newItemQty');
+
+      const text = nameInput.value.trim();
+      if (!text) return;
+
+      const price = parseFloat(priceInput.value) || 0;
+      const qty = parseInt(qtyInput.value, 10) || 1;
+
+      shoppingList.push({
+        id: Date.now(),
+        text: text,
+        price: price,
+        qty: qty,
+        done: false
+      });
+
+      nameInput.value = '';
+      priceInput.value = '';
+      qtyInput.value = '1';
+
       renderShoppingList();
     }
 
