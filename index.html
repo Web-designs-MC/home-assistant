@@ -193,7 +193,7 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       <button class="tab" data-tab="favorites">Favorites</button>
       <button class="tab" data-tab="recurring">Weekly</button>
       <button class="tab" data-tab="meals">Meal Plan</button>
-      <button class="tab" data-tab="recipe">Recipe</button>
+      <button class="tab" data-tab="recipes">Recipes</button>
     </div>
     <div id="signinBanner"></div>
   </header>
@@ -248,33 +248,16 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       <button class="primary-btn" id="planReviewBtn" style="width:100%; margin-top:12px">Review ingredients for this week</button>
 
       <div class="section" style="margin-top:26px">
-        <h2>Your recipes</h2>
-        <div id="recipeLib"></div>
-        <div class="newrecipe">
-          <input id="newRecipeName" placeholder="Recipe name (e.g. Chicken stir fry)" />
-          <textarea id="newRecipeIng" placeholder="Ingredients, one per line, e.g.
-2 chicken breasts
-1 red pepper
-Soy sauce"></textarea>
-          <button class="primary-btn" id="addRecipeBtn" style="width:100%">Save recipe</button>
-        </div>
-      </div>
-
-      <div class="section" style="margin-top:26px">
         <h2>Past weeks</h2>
         <div class="history" id="historyBody"></div>
       </div>
     </div>
 
-    <div id="view-recipe" hidden>
-      <div class="recipebox">
-        <textarea id="recipeInput" placeholder="Paste ingredients, one per line, e.g.
-2 cups flour
-1 onion, chopped
-400g chicken breast"></textarea>
-        <p class="hint">Splits on line breaks or commas, strips quantities so items match your list &amp; favorites cleanly.</p>
-        <button class="primary-btn" id="importBtn">Add all to list</button>
-      </div>
+    <div id="view-recipes" hidden>
+      <p class="hint" style="padding-top:14px">Tap a recipe to see or edit its full details. These are what you assign to days in Meal Plan.</p>
+      <input id="recipeSearch" class="editor-field" placeholder="Search recipes…" style="width:100%; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px; margin-bottom:12px" />
+      <div id="recipeLib"></div>
+      <button class="primary-btn" id="newRecipeBtn" style="width:100%; margin-top:10px">+ New recipe</button>
     </div>
   </main>
 
@@ -362,8 +345,10 @@ Soy sauce"></textarea>
       {name:"Eggs", cat:"dairy", on:false}, {name:"Coffee", cat:"pantry", on:false}
     ],
     recipes: [
-      {id:"r1", name:"Chicken stir fry", ingredients:["Chicken breast","Red pepper","Broccoli","Soy sauce","Garlic","Rice"]},
-      {id:"r2", name:"Spaghetti bolognese", ingredients:["Mince","Spaghetti","Tinned tomatoes","Onion","Garlic","Parmesan"]}
+      {id:"r1", name:"Chicken stir fry", ingredients:["Chicken breast","Red pepper","Broccoli","Soy sauce","Garlic","Rice"],
+        instructions:"Slice chicken and vegetables. Stir fry chicken until cooked through, remove. Stir fry vegetables 2-3 min, add garlic. Return chicken, add soy sauce, toss. Serve over rice."},
+      {id:"r2", name:"Spaghetti bolognese", ingredients:["Mince","Spaghetti","Tinned tomatoes","Onion","Garlic","Parmesan"],
+        instructions:"Brown mince with diced onion and garlic. Add tinned tomatoes, simmer 20 min. Cook spaghetti, combine, top with parmesan."}
     ],
     weeks: {}, // weekKey -> { days: {Mon:recipeId,...}, reviewed: bool }
     budget: null
@@ -378,7 +363,9 @@ Soy sauce"></textarea>
       }) : [],
       favorites: Array.isArray(p.favorites) ? p.favorites : defaultState.favorites,
       recurring: Array.isArray(p.recurring) ? p.recurring : defaultState.recurring,
-      recipes: Array.isArray(p.recipes) ? p.recipes : defaultState.recipes,
+      recipes: Array.isArray(p.recipes) ? p.recipes.map(function(r){
+        return Object.assign({instructions:""}, r);
+      }) : defaultState.recipes,
       weeks: (p.weeks && typeof p.weeks === "object") ? p.weeks : {},
       budget: (typeof p.budget === "number") ? p.budget : null
     };
@@ -682,55 +669,94 @@ Soy sauce"></textarea>
     switchTab("list");
   });
 
-  document.getElementById("importBtn").addEventListener("click", function(){
-    var raw = document.getElementById("recipeInput").value;
-    if (!raw.trim()) return;
-    raw.split(/\n|,/).map(function(l){return l.trim();}).filter(Boolean).forEach(function(line){
-      var cleaned = cleanIngredient(line);
-      if (cleaned) addItem(cleaned, null, "Recipe");
-    });
-    document.getElementById("recipeInput").value = "";
-    switchTab("list");
-  });
+  /* ---------------- Recipes ---------------- */
+  var recipeSearchTerm = "";
 
-  /* ---------------- Meal Plan ---------------- */
   function renderRecipeLib(){
     var el = document.getElementById("recipeLib");
+    var term = recipeSearchTerm.trim().toLowerCase();
+    var list = state.recipes.filter(function(r){
+      if (!term) return true;
+      return r.name.toLowerCase().indexOf(term) > -1 ||
+        r.ingredients.some(function(i){ return i.toLowerCase().indexOf(term) > -1; });
+    });
     if (!state.recipes.length){
-      el.innerHTML = '<p class="hint">No recipes yet — add one below.</p>';
+      el.innerHTML = '<p class="hint">No recipes yet — tap "New recipe" below to add your first one.</p>';
       return;
     }
-    el.innerHTML = state.recipes.map(function(r){
+    if (!list.length){
+      el.innerHTML = '<p class="hint">No recipes match "'+escapeHtml(recipeSearchTerm)+'".</p>';
+      return;
+    }
+    el.innerHTML = list.map(function(r){
       return '<div class="recipecard" data-id="'+r.id+'"><div class="row"><div>'
         + '<h3>'+escapeHtml(r.name)+'</h3>'
         + '<div class="ing">'+r.ingredients.map(escapeHtml).join(" · ")+'</div>'
+        + (r.instructions ? '<div class="ing" style="margin-top:4px; font-style:italic">'+escapeHtml(r.instructions.slice(0,140))+(r.instructions.length>140?'…':'')+'</div>' : '')
         + '</div><button class="del" data-act="delrecipe" aria-label="Delete recipe">✕</button></div></div>';
     }).join("");
   }
+  document.getElementById("recipeSearch").addEventListener("input", function(e){
+    recipeSearchTerm = e.target.value;
+    renderRecipeLib();
+  });
   document.getElementById("recipeLib").addEventListener("click", function(e){
-    var btn = e.target.closest("button"); if (!btn) return;
-    var card = btn.closest(".recipecard"); var id = card.getAttribute("data-id");
-    if (btn.dataset.act === "delrecipe"){
+    var btn = e.target.closest("button");
+    var card = e.target.closest(".recipecard"); if (!card) return;
+    var id = card.getAttribute("data-id");
+    if (btn && btn.dataset.act === "delrecipe"){
+      e.stopPropagation();
+      if (!confirm("Delete this recipe?")) return;
       state.recipes = state.recipes.filter(function(r){return r.id!==id;});
-      // also clear any day assignments pointing at this recipe
       Object.keys(state.weeks).forEach(function(wk){
         var days = state.weeks[wk].days || {};
         Object.keys(days).forEach(function(d){ if (days[d] === id) days[d] = ""; });
       });
       save();
+      return;
     }
+    openRecipeEditor(id);
   });
 
-  document.getElementById("addRecipeBtn").addEventListener("click", function(){
-    var name = document.getElementById("newRecipeName").value.trim();
-    var ingRaw = document.getElementById("newRecipeIng").value;
-    if (!name || !ingRaw.trim()) return;
-    var ingredients = ingRaw.split(/\n|,/).map(function(l){return cleanIngredient(l.trim());}).filter(Boolean);
-    state.recipes.push({id: uid(), name: name, ingredients: ingredients});
-    save();
-    document.getElementById("newRecipeName").value = "";
-    document.getElementById("newRecipeIng").value = "";
+  document.getElementById("newRecipeBtn").addEventListener("click", function(){
+    openRecipeEditor(null);
   });
+
+  function openRecipeEditor(id){
+    var existing = id ? state.recipes.find(function(r){return r.id===id;}) : null;
+    var root = document.getElementById("modalRoot");
+    root.innerHTML =
+      '<div class="modal-overlay" id="recipeOverlay"><div class="modal">' +
+      '<h2>'+(existing ? "Edit recipe" : "New recipe")+'</h2>' +
+      '<input class="editor-field" id="reName" placeholder="Recipe name" value="'+(existing?escapeHtml(existing.name):'')+'" style="width:100%; margin-bottom:10px; font-size:16px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink)" />' +
+      '<p class="hint" style="margin-top:0">Ingredients, one per line</p>' +
+      '<textarea id="reIng" class="editor-field" style="width:100%; min-height:110px; font-size:14px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); margin-bottom:10px" placeholder="2 chicken breasts\n1 red pepper\nSoy sauce">'+(existing?escapeHtml(existing.ingredients.join("\n")):'')+'</textarea>' +
+      '<p class="hint" style="margin-top:0">Instructions / how to make it</p>' +
+      '<textarea id="reHowto" class="editor-field" style="width:100%; min-height:130px; font-size:14px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink)" placeholder="Step by step…">'+(existing?escapeHtml(existing.instructions||""):'')+'</textarea>' +
+      '<div class="modal-actions">' +
+      '<button class="secondary-btn" id="reCancel">Cancel</button>' +
+      '<button class="primary-btn" id="reSave">Save recipe</button>' +
+      '</div></div></div>';
+
+    document.getElementById("reCancel").onclick = function(){ root.innerHTML = ""; };
+    document.getElementById("recipeOverlay").addEventListener("click", function(e){
+      if (e.target.id === "recipeOverlay") root.innerHTML = "";
+    });
+    document.getElementById("reSave").onclick = function(){
+      var name = document.getElementById("reName").value.trim();
+      var ingRaw = document.getElementById("reIng").value;
+      var howto = document.getElementById("reHowto").value.trim();
+      if (!name || !ingRaw.trim()){ alert("Give the recipe a name and at least one ingredient."); return; }
+      var ingredients = ingRaw.split(/\n|,/).map(function(l){return cleanIngredient(l.trim());}).filter(Boolean);
+      if (existing){
+        existing.name = name; existing.ingredients = ingredients; existing.instructions = howto;
+      } else {
+        state.recipes.push({id: uid(), name: name, ingredients: ingredients, instructions: howto});
+      }
+      save();
+      root.innerHTML = "";
+    };
+  }
 
   function weekData(key){
     if (!state.weeks[key]) state.weeks[key] = {days:{}, reviewed:false};
@@ -850,7 +876,7 @@ Soy sauce"></textarea>
   /* ---------------- Tabs ---------------- */
   function switchTab(name){
     document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("active", t.dataset.tab === name); });
-    ["list","favorites","recurring","meals","recipe"].forEach(function(v){
+    ["list","favorites","recurring","meals","recipes"].forEach(function(v){
       document.getElementById("view-"+v).hidden = (v !== name);
     });
   }
