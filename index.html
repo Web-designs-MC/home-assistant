@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>Pantry</title>
+<title>Basket</title>
 <style>
 :root{
   --bg:#faf7f2; --surface:#ffffff; --ink:#2b2622; --ink-dim:#7a726690;
@@ -185,7 +185,7 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
 <div class="app">
   <header>
     <div class="top">
-      <h1>Pantry</h1>
+      <h1>Basket</h1>
       <span class="count"><span id="syncStatus" style="color:var(--accent)"></span><span id="count"></span></span>
     </div>
     <div class="tabs">
@@ -278,6 +278,8 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   ========================================================= */
   var GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
   var DRIVE_FILE_NAME = "basket-app-data.json";
+  // The Drive folder Basket's data file lives in. Leave "" to store at the root of My Drive.
+  var DRIVE_FOLDER_ID = "1a3cnDNkFPcDbc7SLmBkI2-G_H00DhWtj";
   var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
   var CATS = [
@@ -448,15 +450,17 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   }
 
   function findOrCreateFile(){
-    var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
-    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=drive&fields=files(id,name)")
+    var q = "name='" + DRIVE_FILE_NAME + "' and trashed=false";
+    if (DRIVE_FOLDER_ID) q += " and '" + DRIVE_FOLDER_ID + "' in parents";
+    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent(q) + "&spaces=drive&fields=files(id,name)")
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data.files && data.files.length){
           return data.files[0].id;
         }
-        // create it
+        // create it (inside DRIVE_FOLDER_ID when set, otherwise at the root of My Drive)
         var metadata = {name: DRIVE_FILE_NAME, mimeType: "application/json"};
+        if (DRIVE_FOLDER_ID) metadata.parents = [DRIVE_FOLDER_ID];
         var boundary = "basket_boundary_" + uid();
         var body = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
           JSON.stringify(metadata) + "\r\n--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" +
