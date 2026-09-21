@@ -1,364 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Grocery List</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Identity Services Library -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    body { overscroll-behavior-y: contain; -webkit-tap-highlight-color: transparent; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Basket</title>
+<style>
+:root{
+  --bg:#faf7f2; --surface:#ffffff; --ink:#2b2622; --ink-dim:#7a726690;
+  --line:#e8e1d6; --accent:#3f6b4f; --accent-ink:#ffffff;
+  --danger:#b3523f; --chip:#f0ece3;
+  --cat-produce:#5c8a52; --cat-dairy:#4c7ea8; --cat-meat:#b3523f;
+  --cat-bakery:#b8863f; --cat-frozen:#4c8a94; --cat-pantry:#8a6f3f;
+  --cat-household:#7a6f8a; --cat-other:#8a8478;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1c1a17; --surface:#252220; --ink:#efe9e1; --ink-dim:#efe9e190;
+    --line:#3a352f; --accent:#6fae7f; --accent-ink:#12160f;
+    --danger:#e08871; --chip:#2f2b26;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+  padding:0 16px; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  display:flex; flex-direction:column;
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+h1,h2,h3{font-family:'DM Serif Display',Georgia,serif; margin:0}
+.app{max-width:560px; margin:0 auto; width:100%; display:flex; flex-direction:column; min-height:100%; flex:1}
+header{
+  position:sticky; top:0; background:var(--bg);
+  padding-top:18px; padding-bottom:10px;
+  z-index:5; border-bottom:1px solid var(--line);
+}
+header .top{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+h1{font-size:28px; font-style:italic; color:var(--accent)}
+.count{font-size:13px; color:var(--ink-dim); font-weight:500; white-space:nowrap; display:flex; align-items:center; gap:6px}
+.tabs{display:flex; gap:6px; margin-top:12px; overflow-x:auto; padding-bottom:2px}
+.tab{
+  border:none; background:var(--chip); color:var(--ink-dim); font:inherit; font-weight:600;
+  font-size:13px; padding:7px 14px; border-radius:999px; cursor:pointer; white-space:nowrap; flex:none;
+}
+.tab.active{background:var(--accent); color:var(--accent-ink)}
+
+.signin-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--chip); border-radius:12px; padding:10px 14px; margin:12px 0; font-size:13px;
+}
+.signin-banner button{
+  border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700;
+  font-size:12px; padding:8px 12px; border-radius:8px; cursor:pointer; flex:none;
+}
+.account{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-dim)}
+.account img{width:22px; height:22px; border-radius:50%}
+.account button{background:none; border:none; color:var(--ink-dim); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
+
+.addbar{display:flex; gap:8px; padding:14px 0}
+.addbar input{
+  flex:1; min-width:0; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  font:inherit; font-size:15px; padding:12px 14px; border-radius:12px;
+}
+.addbar input:focus{outline:2px solid var(--accent); outline-offset:1px}
+.addbar button{
+  border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700;
+  font-size:20px; width:44px; border-radius:12px; cursor:pointer; flex:none;
+}
+.addbar button:active{transform:scale(0.96)}
+
+main{flex:1; padding-bottom:24px; overflow-y:auto}
+.section{margin-top:18px}
+.section h2{
+  font-size:12px; font-family:'DM Sans',sans-serif; text-transform:uppercase; letter-spacing:.08em;
+  font-weight:700; color:var(--ink-dim); display:flex; align-items:center; gap:8px; margin-bottom:8px;
+}
+.section h2 .dot{width:8px; height:8px; border-radius:50%; flex:none}
+.item{
+  display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
+  border-radius:12px; padding:12px 14px; margin-bottom:6px;
+}
+.item .check{
+  width:22px; height:22px; border-radius:50%; border:2px solid var(--line); flex:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:var(--accent-ink); background:transparent; padding:0;
+}
+.item.done .check{background:var(--accent); border-color:var(--accent)}
+.item .label{flex:1; font-size:15px; min-width:0; overflow-wrap:anywhere}
+.item.done .label{text-decoration:line-through; color:var(--ink-dim)}
+.item .src{font-size:11px; color:var(--ink-dim); font-weight:600; flex:none}
+.item .del{background:none; border:none; color:var(--ink-dim); font-size:18px; cursor:pointer; flex:none; padding:2px 4px}
+.empty{color:var(--ink-dim); font-size:14px; text-align:center; padding:40px 20px; line-height:1.6}
+
+.favgrid{display:flex; flex-wrap:wrap; gap:8px; padding:14px 0}
+.fav{
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px;
+  font-weight:600; padding:9px 13px; border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:6px;
+}
+.fav .dot{width:7px; height:7px; border-radius:50%; flex:none}
+.fav.added{opacity:.4}
+
+.recurring{padding:14px 0}
+.recrow{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:6px}
+.recrow .label{flex:1; font-size:15px}
+.toggle{width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex:none; padding:0}
+.toggle.on{background:var(--accent)}
+.toggle .knob{position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--surface); transition:left .15s}
+.toggle.on .knob{left:20px}
+
+.recipebox{padding:14px 0}
+.recipebox textarea{
+  width:100%; min-height:110px; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  font:inherit; font-size:14px; padding:12px 14px; border-radius:12px; resize:vertical;
+}
+.hint{font-size:12px; color:var(--ink-dim); margin:8px 0 12px; line-height:1.5}
+.primary-btn{
+  border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700;
+  font-size:14px; padding:11px 18px; border-radius:12px; cursor:pointer;
+}
+.primary-btn:disabled{opacity:.5; cursor:default}
+.secondary-btn{
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-weight:600;
+  font-size:13px; padding:9px 14px; border-radius:10px; cursor:pointer;
+}
+.addfavrow{display:flex; gap:8px; padding-top:6px; flex-wrap:wrap}
+.addfavrow input{flex:1; min-width:120px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px}
+.addfavrow select{border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px; padding:10px; border-radius:10px}
+footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 20px}
+
+/* Meal plan */
+.weekgrid{display:flex; flex-direction:column; gap:8px; padding:14px 0}
+.dayrow{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.dayrow .dname{width:38px; flex:none; font-size:12px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em}
+.dayrow select{flex:1; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:8px 10px; border-radius:8px}
+.weekbar{display:flex; align-items:center; justify-content:space-between; padding-top:14px; gap:8px}
+.weekbar .wk{font-size:13px; color:var(--ink-dim); font-weight:600}
+
+.recipecard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:8px}
+.recipecard h3{font-size:16px; font-style:italic; color:var(--ink)}
+.recipecard .ing{font-size:12px; color:var(--ink-dim); margin-top:4px; line-height:1.5}
+.recipecard .row{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.recipecard .del{background:none;border:none;color:var(--ink-dim);font-size:16px;cursor:pointer;flex:none;padding:2px 4px}
+
+.newrecipe{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:14px}
+.newrecipe input{width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px; margin-bottom:8px}
+.newrecipe textarea{width:100%; min-height:90px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:13px; padding:10px 12px; border-radius:10px; resize:vertical; margin-bottom:8px}
+
+.modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50}
+.modal{background:var(--surface); width:100%; max-width:560px; border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px)); max-height:80vh; overflow-y:auto}
+.modal h2{font-size:19px; font-style:italic; color:var(--accent); margin-bottom:4px}
+.modal .sub{font-size:12px; color:var(--ink-dim); margin-bottom:14px}
+.checkrow{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line)}
+.checkrow input{width:20px; height:20px; accent-color:var(--accent); flex:none}
+.checkrow label{flex:1; font-size:15px}
+.modal-actions{display:flex; gap:8px; margin-top:16px}
+.modal-actions button{flex:1}
+
+.history{padding:14px 0}
+.histweek{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px}
+.histweek .wl{font-size:12px; color:var(--ink-dim); font-weight:700; margin-bottom:6px}
+.histweek .days{font-size:13px; line-height:1.6}
+.histweek button{margin-top:8px}
+</style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex justify-center">
+<body>
 
-  <div id="tab-shopping" class="w-full max-w-md bg-white dark:bg-slate-900 min-h-screen flex flex-col justify-between p-4 shadow-xl select-none">
-    
-    <div>
-      <!-- Header Bar & Sync Status -->
-      <div class="flex items-center justify-between mt-2 mb-4">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Grocery List</h1>
-          <p id="driveStatus" class="text-xs text-slate-500 dark:text-slate-400">Drive status: Disconnected</p>
-        </div>
-        <button id="authBtn" onclick="handleAuthClick()" class="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors">
-          Connect Drive
-        </button>
+<div class="app">
+  <header>
+    <div class="top">
+      <h1>Basket</h1>
+      <span class="count"><span id="syncStatus" style="color:var(--accent)"></span><span id="count"></span></span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="list">List</button>
+      <button class="tab" data-tab="favorites">Favorites</button>
+      <button class="tab" data-tab="recurring">Weekly</button>
+      <button class="tab" data-tab="meals">Meal Plan</button>
+      <button class="tab" data-tab="recipe">Recipe</button>
+    </div>
+    <div id="signinBanner"></div>
+  </header>
+
+  <main>
+    <div id="view-list">
+      <div class="addbar">
+        <input id="newItem" placeholder="Add an item…" autocomplete="off" />
+        <button id="addBtn" aria-label="Add">+</button>
       </div>
-
-      <!-- Quick Add Form: Name, Price, Qty -->
-      <form onsubmit="event.preventDefault(); addShoppingItem();" class="flex flex-col gap-2 mb-5">
-        <input 
-          type="text" 
-          id="newItemName" 
-          placeholder="Item (e.g. Milk)..." 
-          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
-          autocomplete="off"
-          disabled
-        >
-        
-        <div class="flex gap-2">
-          <input 
-            type="number" 
-            id="newItemPrice" 
-            placeholder="Price" 
-            step="0.01" 
-            min="0"
-            class="w-1/2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
-            autocomplete="off"
-            disabled
-          >
-          <input 
-            type="number" 
-            id="newItemQty" 
-            placeholder="Qty" 
-            value="1" 
-            min="1"
-            class="w-1/2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
-            autocomplete="off"
-            disabled
-          >
-          <button 
-            type="button"
-            id="addBtn"
-            onclick="addShoppingItem()"
-            disabled
-            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xl transition-all shadow-sm flex items-center justify-center min-w-[54px] disabled:opacity-50"
-            aria-label="Add item"
-          >
-            ＋
-          </button>
-        </div>
-      </form>
-
-      <!-- Total Price Header -->
-      <div class="flex items-center justify-between px-2 py-2 mb-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300">
-        <span>Total Estimated:</span>
-        <span id="grandTotal" class="text-emerald-600 dark:text-emerald-400 font-bold">R0.00</span>
-      </div>
-
-      <!-- Shopping List -->
-      <ul id="shoppingListContainer" class="space-y-2 mb-6"></ul>
+      <div id="listBody"></div>
     </div>
 
-    <!-- Bottom Actions -->
-    <div class="pt-4 pb-2 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-      <button id="clearCheckedBtn" onclick="clearCompletedItems()" disabled class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98 disabled:opacity-50">
-        Clear Checked
-      </button>
-      <button id="clearAllBtn" onclick="clearAllItems()" disabled class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98 disabled:opacity-50">
-        Clear All
-      </button>
+    <div id="view-favorites" hidden>
+      <p class="hint" style="padding-top:14px">Tap to drop straight into your list.</p>
+      <div class="favgrid" id="favGrid"></div>
+      <div class="addfavrow">
+        <input id="newFav" placeholder="New favorite (e.g. Oat milk)" />
+        <select id="newFavCat">
+          <option value="produce">Produce</option>
+          <option value="dairy">Dairy</option>
+          <option value="meat">Meat &amp; Fish</option>
+          <option value="bakery">Bakery</option>
+          <option value="frozen">Frozen</option>
+          <option value="pantry">Pantry</option>
+          <option value="household">Household</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="primary-btn" id="addFavBtn">Save</button>
+      </div>
     </div>
-  </div>
 
-  <script>
-    // -------------------------------------------------------------
-    // CONFIGURATION: Google Client ID
-    // -------------------------------------------------------------
-    const CLIENT_ID = '620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    <div id="view-recurring" hidden>
+      <p class="hint" style="padding-top:14px">Staples you buy every week. Toggle on the ones you're low on — "Refill this week" adds them all at once.</p>
+      <div class="recurring" id="recurringBody"></div>
+      <button class="primary-btn" id="refillBtn" style="width:100%">Refill this week's staples</button>
+    </div>
 
-    let tokenClient;
-    let accessToken = null;
-    let driveFileId = null;
-    let shoppingList = [];
+    <div id="view-meals" hidden>
+      <div class="weekbar">
+        <button class="secondary-btn" id="prevWeekBtn">← Prev</button>
+        <span class="wk" id="weekLabel"></span>
+        <button class="secondary-btn" id="nextWeekBtn">Next →</button>
+      </div>
+      <div class="weekgrid" id="weekGrid"></div>
+      <button class="primary-btn" id="planReviewBtn" style="width:100%; margin-top:12px">Review ingredients for this week</button>
 
-    // Initialize Google Auth Token Client
-    window.onload = () => {
-      renderShoppingList(false);
-      if (typeof google !== 'undefined') {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          scope: SCOPES,
-          callback: async (resp) => {
-            if (resp.error) {
-              document.getElementById('driveStatus').innerText = 'Drive: Connection Error';
-              return;
-            }
-            accessToken = resp.access_token;
-            document.getElementById('driveStatus').innerText = 'Drive: Connected 🟢';
-            document.getElementById('authBtn').style.display = 'none';
-            enableInputs(true);
-            await syncWithDrive();
-          },
-        });
-      }
+      <div class="section" style="margin-top:26px">
+        <h2>Your recipes</h2>
+        <div id="recipeLib"></div>
+        <div class="newrecipe">
+          <input id="newRecipeName" placeholder="Recipe name (e.g. Chicken stir fry)" />
+          <textarea id="newRecipeIng" placeholder="Ingredients, one per line, e.g.
+2 chicken breasts
+1 red pepper
+Soy sauce"></textarea>
+          <button class="primary-btn" id="addRecipeBtn" style="width:100%">Save recipe</button>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:26px">
+        <h2>Past weeks</h2>
+        <div class="history" id="historyBody"></div>
+      </div>
+    </div>
+
+    <div id="view-recipe" hidden>
+      <div class="recipebox">
+        <textarea id="recipeInput" placeholder="Paste ingredients, one per line, e.g.
+2 cups flour
+1 onion, chopped
+400g chicken breast"></textarea>
+        <p class="hint">Splits on line breaks or commas, strips quantities so items match your list &amp; favorites cleanly.</p>
+        <button class="primary-btn" id="importBtn">Add all to list</button>
+      </div>
+    </div>
+  </main>
+
+  <footer id="footerNote">Saved to your Google Drive · no ads</footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     CONFIG — replace with your own OAuth Client ID.
+     See setup instructions provided alongside this file.
+  ========================================================= */
+  var GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
+  var DRIVE_FILE_NAME = "basket-app-data.json";
+  var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+
+  var CATS = [
+    {id:"produce", label:"Produce", color:"var(--cat-produce)"},
+    {id:"dairy", label:"Dairy & Eggs", color:"var(--cat-dairy)"},
+    {id:"meat", label:"Meat & Fish", color:"var(--cat-meat)"},
+    {id:"bakery", label:"Bakery", color:"var(--cat-bakery)"},
+    {id:"frozen", label:"Frozen", color:"var(--cat-frozen)"},
+    {id:"pantry", label:"Pantry", color:"var(--cat-pantry)"},
+    {id:"household", label:"Household", color:"var(--cat-household)"},
+    {id:"other", label:"Other", color:"var(--cat-other)"}
+  ];
+  var CATMAP = {}; CATS.forEach(function(c){ CATMAP[c.id] = c; });
+
+  var RULES = [
+    [/apple|banana|orange|lettuce|tomato|onion|potato|carrot|pepper|cucumber|avocado|lemon|lime|garlic|spinach|broccoli|grape|berry|mushroom|herb|basil|parsley|fruit|veg/i,"produce"],
+    [/milk|cheese|yogh?urt|butter|cream|egg/i,"dairy"],
+    [/chicken|beef|pork|fish|salmon|bacon|mince|sausage|lamb|prawn|meat|turkey/i,"meat"],
+    [/bread|bun|roll|bagel|croissant|baguette|muffin|cake/i,"bakery"],
+    [/frozen|ice cream/i,"frozen"],
+    [/rice|pasta|flour|sugar|oil|sauce|tin|can|cereal|oats|beans|lentil|spice|salt|coffee|tea|jam|honey|stock|noodle/i,"pantry"],
+    [/paper|soap|detergent|cleaner|foil|bag|bin|tissue|toothpaste|shampoo|battery/i,"household"]
+  ];
+  function guessCat(name){
+    for (var i=0;i<RULES.length;i++){ if (RULES[i][0].test(name)) return RULES[i][1]; }
+    return "other";
+  }
+  function cleanIngredient(line){
+    return line
+      .replace(/^[\d\/.\s]+(cups?|tbsp|tsp|g|kg|ml|l|oz|lb|cloves?|cans?|tins?|slices?|pieces?|pinch(?:es)?)?\.?\s*(of\s+)?/i, "")
+      .replace(/^[-•*]\s*/, "")
+      .trim();
+  }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  var DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  function isoWeekKey(d){
+    var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var day = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - day + 3);
+    var firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
+    var week = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay()+6)%7)) / 7);
+    return date.getUTCFullYear() + "-W" + (week<10?"0":"")+week;
+  }
+  function mondayOf(d){
+    var day = (d.getDay()+6)%7;
+    var m = new Date(d); m.setDate(d.getDate()-day); m.setHours(0,0,0,0);
+    return m;
+  }
+
+  var defaultState = {
+    items: [],
+    favorites: [
+      {name:"Milk", cat:"dairy"}, {name:"Eggs", cat:"dairy"}, {name:"Bread", cat:"bakery"},
+      {name:"Bananas", cat:"produce"}, {name:"Chicken breast", cat:"meat"}, {name:"Rice", cat:"pantry"},
+      {name:"Tomatoes", cat:"produce"}, {name:"Butter", cat:"dairy"}
+    ],
+    recurring: [
+      {name:"Milk", cat:"dairy", on:true}, {name:"Bread", cat:"bakery", on:true},
+      {name:"Eggs", cat:"dairy", on:false}, {name:"Coffee", cat:"pantry", on:false}
+    ],
+    recipes: [
+      {id:"r1", name:"Chicken stir fry", ingredients:["Chicken breast","Red pepper","Broccoli","Soy sauce","Garlic","Rice"]},
+      {id:"r2", name:"Spaghetti bolognese", ingredients:["Mince","Spaghetti","Tinned tomatoes","Onion","Garlic","Parmesan"]}
+    ],
+    weeks: {} // weekKey -> { days: {Mon:recipeId,...}, reviewed: bool }
+  };
+
+  function cloneDefault(){ return JSON.parse(JSON.stringify(defaultState)); }
+  function normalize(p){
+    p = p || {};
+    return {
+      items: Array.isArray(p.items) ? p.items : [],
+      favorites: Array.isArray(p.favorites) ? p.favorites : defaultState.favorites,
+      recurring: Array.isArray(p.recurring) ? p.recurring : defaultState.recurring,
+      recipes: Array.isArray(p.recipes) ? p.recipes : defaultState.recipes,
+      weeks: (p.weeks && typeof p.weeks === "object") ? p.weeks : {}
     };
+  }
 
-    function handleAuthClick() {
-      if (!navigator.onLine) {
-        alert('Internet connection required to access Google Drive.');
-        return;
+  var state = cloneDefault();
+  var ready = false;
+  var currentWeekStart = mondayOf(new Date());
+
+  /* ---------------- Local cache (instant reopen; not the source of truth) ---------------- */
+  function cacheRead(){
+    try { var raw = localStorage.getItem("basket_cache_v2"); return raw ? normalize(JSON.parse(raw)) : null; }
+    catch(e){ return null; }
+  }
+  function cacheWrite(){
+    try { localStorage.setItem("basket_cache_v2", JSON.stringify(state)); } catch(e){}
+  }
+
+  function setStatus(text){ var el = document.getElementById("syncStatus"); if (el) el.textContent = text; }
+
+  /* ================= Google Sign-In + Drive persistence ================= */
+  var tokenClient = null;
+  var accessToken = null;
+  var driveFileId = null;
+  var saveTimer = null;
+  var GAPI_READY = false;
+
+  function loadScript(src){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement("script");
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function initGis(){
+    if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: function(resp){
+        if (resp && resp.access_token){
+          accessToken = resp.access_token;
+          try { sessionStorage.setItem("basket_gtoken", accessToken); } catch(e){}
+          onSignedIn();
+        }
       }
-      if (accessToken === null && tokenClient) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-      }
+    });
+    return true;
+  }
+
+  function renderSigninBanner(){
+    var el = document.getElementById("signinBanner");
+    if (accessToken){
+      el.innerHTML = '<div class="account"><span>✓ Synced to Google Drive</span>' +
+        '<button id="signOutBtn">Sign out</button></div>';
+      document.getElementById("signOutBtn").onclick = signOut;
+    } else {
+      el.innerHTML = '<div class="signin-banner"><span>Sign in to save your list to Google Drive — it won\'t be lost if this browser clears its data.</span>' +
+        '<button id="signInBtn">Sign in</button></div>';
+      document.getElementById("signInBtn").onclick = function(){
+        if (tokenClient) tokenClient.requestAccessToken({prompt: "consent"});
+      };
     }
+  }
 
-    function enableInputs(enable) {
-      document.getElementById('newItemName').disabled = !enable;
-      document.getElementById('newItemPrice').disabled = !enable;
-      document.getElementById('newItemQty').disabled = !enable;
-      document.getElementById('addBtn').disabled = !enable;
-      document.getElementById('clearCheckedBtn').disabled = !enable;
-      document.getElementById('clearAllBtn').disabled = !enable;
+  function signOut(){
+    if (accessToken && window.google && google.accounts && google.accounts.oauth2){
+      google.accounts.oauth2.revoke(accessToken, function(){});
     }
+    accessToken = null; driveFileId = null;
+    try { sessionStorage.removeItem("basket_gtoken"); } catch(e){}
+    renderSigninBanner();
+  }
 
-    // Google Drive REST API Operations
-    async function syncWithDrive() {
-      if (!accessToken || !navigator.onLine) {
-        document.getElementById('driveStatus').innerText = 'Drive: Offline';
-        return;
+  function driveFetch(url, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({Authorization: "Bearer " + accessToken}, opts.headers || {});
+    return fetch(url, opts);
+  }
+
+  function findOrCreateFile(){
+    var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
+    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=drive&fields=files(id,name)")
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.files && data.files.length){
+          return data.files[0].id;
+        }
+        // create it
+        var metadata = {name: DRIVE_FILE_NAME, mimeType: "application/json"};
+        var boundary = "basket_boundary_" + uid();
+        var body = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+          JSON.stringify(metadata) + "\r\n--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" +
+          JSON.stringify(cloneDefault()) + "\r\n--" + boundary + "--";
+        return driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
+          method: "POST",
+          headers: {"Content-Type": 'multipart/related; boundary="' + boundary + '"'},
+          body: body
+        }).then(function(r){ return r.json(); }).then(function(f){ return f.id; });
+      });
+  }
+
+  function driveRead(fileId){
+    return driveFetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media")
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; });
+  }
+
+  function driveWrite(fileId, data){
+    return driveFetch("https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media", {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data)
+    });
+  }
+
+  function onSignedIn(){
+    renderSigninBanner();
+    setStatus("Connecting…");
+    findOrCreateFile().then(function(id){
+      driveFileId = id;
+      return driveRead(id);
+    }).then(function(remote){
+      var cached = cacheRead();
+      if (remote){
+        state = normalize(remote);
+      } else if (cached){
+        state = cached;
       }
+      ready = true;
+      renderAll();
+      cacheWrite();
+      setStatus("Saved");
+      setTimeout(function(){ setStatus(""); }, 1200);
+    }).catch(function(){
+      setStatus("Couldn't connect");
+    });
+  }
 
-      try {
-        document.getElementById('driveStatus').innerText = 'Drive: Loading... ⏳';
-        const searchRes = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=name='grocery-list.json' and trashed=false`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        const searchData = await searchRes.json();
-
-        if (searchData.files && searchData.files.length > 0) {
-          driveFileId = searchData.files[0].id;
-          const fileRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
-          );
-          const cloudList = await fileRes.json();
-          if (Array.isArray(cloudList)) {
-            shoppingList = cloudList;
-            renderShoppingList(false);
-          }
+  function save(){
+    cacheWrite();
+    if (!ready) return;
+    renderAll();
+    if (!accessToken || !driveFileId) return;
+    clearTimeout(saveTimer);
+    setStatus("Saving…");
+    saveTimer = setTimeout(function(){
+      driveWrite(driveFileId, state).then(function(r){
+        if (r.ok){
+          setStatus("Saved");
+          setTimeout(function(){ setStatus(""); }, 1200);
         } else {
-          await createDriveFile();
+          setStatus("Couldn't save");
         }
-        document.getElementById('driveStatus').innerText = 'Drive: Connected 🟢';
-      } catch (err) {
-        console.error('Drive Sync Error:', err);
-        document.getElementById('driveStatus').innerText = 'Drive: Sync Error ⚠️';
-      }
+      }).catch(function(){ setStatus("Couldn't save"); });
+    }, 500);
+  }
+
+  /* ---------------- App logic (list, favorites, recurring, recipes, meal plan) ---------------- */
+
+  function renderAll(){
+    renderList(); renderFavorites(); renderRecurring(); renderWeek(); renderRecipeLib(); renderHistory();
+  }
+
+  function addItem(name, cat, src){
+    name = (name||"").trim();
+    if (!name) return;
+    cat = cat || guessCat(name);
+    state.items.push({id:uid(), name:name, cat:cat, done:false, src: src || null});
+    save();
+  }
+
+  function renderCount(){
+    var open = state.items.filter(function(i){return !i.done;}).length;
+    document.getElementById("count").textContent = open === 0 ? "" : (open + (open===1?" item":" items"));
+  }
+
+  function renderList(){
+    renderCount();
+    var body = document.getElementById("listBody");
+    if (state.items.length === 0){
+      body.innerHTML = '<div class="empty">Your basket is empty.<br>Add something above, grab a favorite, or plan some meals.</div>';
+      return;
     }
-
-    async function saveToDrive() {
-      if (!accessToken || !navigator.onLine) {
-        alert('Cannot save: Internet connection or Drive sign-in required.');
-        return;
-      }
-
-      document.getElementById('driveStatus').innerText = 'Drive: Saving... ⏳';
-      const fileData = JSON.stringify(shoppingList);
-      
-      if (!driveFileId) {
-        await createDriveFile();
-        return;
-      }
-
-      try {
-        await fetch(
-          `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
-          {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: fileData,
-          }
-        );
-        document.getElementById('driveStatus').innerText = 'Drive: Saved ✓';
-      } catch (err) {
-        console.error('Save to Drive Error:', err);
-        document.getElementById('driveStatus').innerText = 'Drive: Save Error ⚠️';
-      }
-    }
-
-    async function createDriveFile() {
-      const metadata = { name: 'grocery-list.json', mimeType: 'application/json' };
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', new Blob([JSON.stringify(shoppingList)], { type: 'application/json' }));
-
-      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: form,
+    var byCat = {};
+    state.items.forEach(function(it){ (byCat[it.cat] = byCat[it.cat]||[]).push(it); });
+    var html = "";
+    CATS.forEach(function(c){
+      var list = byCat[c.id];
+      if (!list || !list.length) return;
+      list.sort(function(a,b){ return (a.done?1:0) - (b.done?1:0); });
+      html += '<div class="section"><h2><span class="dot" style="background:'+c.color+'"></span>'+c.label+'</h2>';
+      list.forEach(function(it){
+        html += '<div class="item'+(it.done?' done':'')+'" data-id="'+it.id+'">'
+          + '<button class="check" data-act="toggle">'+(it.done?'✓':'')+'</button>'
+          + '<span class="label">'+escapeHtml(it.name)+'</span>'
+          + (it.src ? '<span class="src">'+escapeHtml(it.src)+'</span>' : '')
+          + '<button class="del" data-act="del" aria-label="Remove">✕</button>'
+          + '</div>';
       });
-      const data = await res.json();
-      driveFileId = data.id;
+      html += '</div>';
+    });
+    body.innerHTML = html;
+  }
+
+  document.getElementById("listBody").addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if (!btn) return;
+    var row = btn.closest(".item"); var id = row.getAttribute("data-id");
+    if (btn.dataset.act === "toggle"){
+      var it = state.items.find(function(i){return i.id===id;});
+      if (it){ it.done = !it.done; save(); }
+    } else if (btn.dataset.act === "del"){
+      state.items = state.items.filter(function(i){return i.id!==id;});
+      save();
     }
+  });
 
-    // Shopping List App Logic
-    function renderShoppingList(shouldSaveToDrive = true) {
-      const container = document.getElementById('shoppingListContainer');
-      const grandTotalEl = document.getElementById('grandTotal');
-      container.innerHTML = '';
+  document.getElementById("addBtn").addEventListener("click", function(){
+    var inp = document.getElementById("newItem");
+    addItem(inp.value); inp.value=""; inp.focus();
+  });
+  document.getElementById("newItem").addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); document.getElementById("addBtn").click(); }
+  });
 
-      if (!accessToken) {
-        container.innerHTML = `
-          <li class="text-center py-12 text-slate-400 dark:text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
-            <span class="text-3xl">🔒</span>
-            <span>Connect to Google Drive to view your list</span>
-          </li>`;
-        grandTotalEl.innerText = 'R0.00';
-        return;
-      }
+  function renderFavorites(){
+    var grid = document.getElementById("favGrid");
+    grid.innerHTML = state.favorites.map(function(f,idx){
+      var c = CATMAP[f.cat] || CATMAP.other;
+      return '<button class="fav" data-idx="'+idx+'"><span class="dot" style="background:'+c.color+'"></span>'+escapeHtml(f.name)+'</button>';
+    }).join("");
+  }
+  document.getElementById("favGrid").addEventListener("click", function(e){
+    var btn = e.target.closest(".fav"); if (!btn) return;
+    var f = state.favorites[+btn.dataset.idx];
+    if (f){ addItem(f.name, f.cat); btn.classList.add("added"); setTimeout(function(){btn.classList.remove("added");},400); }
+  });
+  document.getElementById("addFavBtn").addEventListener("click", function(){
+    var nameInp = document.getElementById("newFav");
+    var name = nameInp.value.trim(); if (!name) return;
+    var cat = document.getElementById("newFavCat").value;
+    state.favorites.push({name:name, cat:cat});
+    save(); nameInp.value = "";
+  });
 
-      if (shoppingList.length === 0) {
-        container.innerHTML = `
-          <li class="text-center py-12 text-slate-400 dark:text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
-            <span class="text-3xl">🛒</span>
-            <span>Your list is currently empty</span>
-          </li>`;
-        grandTotalEl.innerText = 'R0.00';
-        return;
-      }
+  function renderRecurring(){
+    var body = document.getElementById("recurringBody");
+    body.innerHTML = state.recurring.map(function(r,idx){
+      var c = CATMAP[r.cat] || CATMAP.other;
+      return '<div class="recrow">'
+        + '<span class="dot" style="background:'+c.color+';width:8px;height:8px;border-radius:50%;flex:none"></span>'
+        + '<span class="label">'+escapeHtml(r.name)+'</span>'
+        + '<button class="toggle'+(r.on?' on':'')+'" data-idx="'+idx+'"><span class="knob"></span></button>'
+        + '</div>';
+    }).join("");
+  }
+  document.getElementById("recurringBody").addEventListener("click", function(e){
+    var btn = e.target.closest(".toggle"); if (!btn) return;
+    var r = state.recurring[+btn.dataset.idx];
+    r.on = !r.on; save();
+  });
+  document.getElementById("refillBtn").addEventListener("click", function(){
+    state.recurring.filter(function(r){return r.on;}).forEach(function(r){ addItem(r.name, r.cat, "Weekly"); });
+    switchTab("list");
+  });
 
-      let totalCost = 0;
-      const sortedList = [...shoppingList].sort((a, b) => a.done - b.done);
+  document.getElementById("importBtn").addEventListener("click", function(){
+    var raw = document.getElementById("recipeInput").value;
+    if (!raw.trim()) return;
+    raw.split(/\n|,/).map(function(l){return l.trim();}).filter(Boolean).forEach(function(line){
+      var cleaned = cleanIngredient(line);
+      if (cleaned) addItem(cleaned, null, "Recipe");
+    });
+    document.getElementById("recipeInput").value = "";
+    switchTab("list");
+  });
 
-      sortedList.forEach(item => {
-        const itemPrice = parseFloat(item.price) || 0;
-        const itemQty = parseInt(item.qty, 10) || 1;
-        const itemTotal = itemPrice * itemQty;
-        
-        if (!item.done) {
-          totalCost += itemTotal;
+  /* ---------------- Meal Plan ---------------- */
+  function renderRecipeLib(){
+    var el = document.getElementById("recipeLib");
+    if (!state.recipes.length){
+      el.innerHTML = '<p class="hint">No recipes yet — add one below.</p>';
+      return;
+    }
+    el.innerHTML = state.recipes.map(function(r){
+      return '<div class="recipecard" data-id="'+r.id+'"><div class="row"><div>'
+        + '<h3>'+escapeHtml(r.name)+'</h3>'
+        + '<div class="ing">'+r.ingredients.map(escapeHtml).join(" · ")+'</div>'
+        + '</div><button class="del" data-act="delrecipe" aria-label="Delete recipe">✕</button></div></div>';
+    }).join("");
+  }
+  document.getElementById("recipeLib").addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if (!btn) return;
+    var card = btn.closest(".recipecard"); var id = card.getAttribute("data-id");
+    if (btn.dataset.act === "delrecipe"){
+      state.recipes = state.recipes.filter(function(r){return r.id!==id;});
+      // also clear any day assignments pointing at this recipe
+      Object.keys(state.weeks).forEach(function(wk){
+        var days = state.weeks[wk].days || {};
+        Object.keys(days).forEach(function(d){ if (days[d] === id) days[d] = ""; });
+      });
+      save();
+    }
+  });
+
+  document.getElementById("addRecipeBtn").addEventListener("click", function(){
+    var name = document.getElementById("newRecipeName").value.trim();
+    var ingRaw = document.getElementById("newRecipeIng").value;
+    if (!name || !ingRaw.trim()) return;
+    var ingredients = ingRaw.split(/\n|,/).map(function(l){return cleanIngredient(l.trim());}).filter(Boolean);
+    state.recipes.push({id: uid(), name: name, ingredients: ingredients});
+    save();
+    document.getElementById("newRecipeName").value = "";
+    document.getElementById("newRecipeIng").value = "";
+  });
+
+  function weekData(key){
+    if (!state.weeks[key]) state.weeks[key] = {days:{}, reviewed:false};
+    return state.weeks[key];
+  }
+
+  function renderWeek(){
+    var key = isoWeekKey(currentWeekStart);
+    var wd = weekData(key);
+    var label = currentWeekStart.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+    var end = new Date(currentWeekStart); end.setDate(end.getDate()+6);
+    document.getElementById("weekLabel").textContent = "Week of " + label + " – " + end.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+
+    var grid = document.getElementById("weekGrid");
+    grid.innerHTML = DAYS.map(function(d){
+      var sel = '<select data-day="'+d+'"><option value="">— no meal —</option>' +
+        state.recipes.map(function(r){
+          return '<option value="'+r.id+'"'+(wd.days[d]===r.id?' selected':'')+'>'+escapeHtml(r.name)+'</option>';
+        }).join("") + '</select>';
+      return '<div class="dayrow"><span class="dname">'+d+'</span>'+sel+'</div>';
+    }).join("");
+  }
+  document.getElementById("weekGrid").addEventListener("change", function(e){
+    var sel = e.target.closest("select"); if (!sel) return;
+    var key = isoWeekKey(currentWeekStart);
+    var wd = weekData(key);
+    wd.days[sel.dataset.day] = sel.value;
+    wd.reviewed = false;
+    save();
+  });
+  document.getElementById("prevWeekBtn").addEventListener("click", function(){
+    currentWeekStart.setDate(currentWeekStart.getDate()-7); renderWeek();
+  });
+  document.getElementById("nextWeekBtn").addEventListener("click", function(){
+    currentWeekStart.setDate(currentWeekStart.getDate()+7); renderWeek();
+  });
+
+  function renderHistory(){
+    var el = document.getElementById("historyBody");
+    var keys = Object.keys(state.weeks).sort().reverse().filter(function(k){ return k !== isoWeekKey(currentWeekStart); });
+    if (!keys.length){ el.innerHTML = '<p class="hint">No past weeks yet.</p>'; return; }
+    el.innerHTML = keys.slice(0,12).map(function(k){
+      var wd = state.weeks[k];
+      var days = DAYS.map(function(d){
+        var r = state.recipes.find(function(rr){ return rr.id === wd.days[d]; });
+        return d + ": " + (r ? escapeHtml(r.name) : "—");
+      }).join("<br>");
+      return '<div class="histweek"><div class="wl">'+k+'</div><div class="days">'+days+'</div>' +
+        '<button class="secondary-btn" data-wk="'+k+'" data-act="repeat">Repeat this week</button></div>';
+    }).join("");
+  }
+  document.getElementById("historyBody").addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if (!btn || btn.dataset.act !== "repeat") return;
+    var src = state.weeks[btn.dataset.wk];
+    var key = isoWeekKey(currentWeekStart);
+    state.weeks[key] = {days: Object.assign({}, src.days), reviewed:false};
+    save(); renderWeek();
+    switchTab("meals");
+  });
+
+  /* ---- Ingredient review modal ---- */
+  document.getElementById("planReviewBtn").addEventListener("click", function(){
+    var key = isoWeekKey(currentWeekStart);
+    var wd = weekData(key);
+    var needed = {}; // name(lower) -> {name, count}
+    DAYS.forEach(function(d){
+      var r = state.recipes.find(function(rr){ return rr.id === wd.days[d]; });
+      if (!r) return;
+      r.ingredients.forEach(function(ing){
+        var k = ing.trim().toLowerCase();
+        if (!k) return;
+        if (!needed[k]) needed[k] = {name: ing.trim(), count:0};
+        needed[k].count++;
+      });
+    });
+    var list = Object.values(needed);
+    if (!list.length){
+      alert("No recipes assigned this week yet — pick some meals first.");
+      return;
+    }
+    openReviewModal(list, wd);
+  });
+
+  function openReviewModal(list, wd){
+    var root = document.getElementById("modalRoot");
+    var rows = list.map(function(item, idx){
+      var lbl = item.name + (item.count > 1 ? " (×" + item.count + ")" : "");
+      return '<div class="checkrow"><input type="checkbox" id="ck'+idx+'" checked>' +
+        '<label for="ck'+idx+'">'+escapeHtml(lbl)+'</label></div>';
+    }).join("");
+    root.innerHTML =
+      '<div class="modal-overlay" id="reviewOverlay"><div class="modal">' +
+      '<h2>Review ingredients</h2>' +
+      '<p class="sub">Ticked items get added to your Basket list. Untick anything you already have in stock.</p>' +
+      rows +
+      '<div class="modal-actions">' +
+      '<button class="secondary-btn" id="reviewCancel">Cancel</button>' +
+      '<button class="primary-btn" id="reviewConfirm">Add to list</button>' +
+      '</div></div></div>';
+
+    document.getElementById("reviewCancel").onclick = function(){ root.innerHTML = ""; };
+    document.getElementById("reviewOverlay").addEventListener("click", function(e){
+      if (e.target.id === "reviewOverlay") root.innerHTML = "";
+    });
+    document.getElementById("reviewConfirm").onclick = function(){
+      list.forEach(function(item, idx){
+        var cb = document.getElementById("ck"+idx);
+        if (cb && cb.checked) addItem(item.name, null, "Meal plan");
+      });
+      wd.reviewed = true;
+      save();
+      root.innerHTML = "";
+      switchTab("list");
+    };
+  }
+
+  /* ---------------- Tabs ---------------- */
+  function switchTab(name){
+    document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("active", t.dataset.tab === name); });
+    ["list","favorites","recurring","meals","recipe"].forEach(function(v){
+      document.getElementById("view-"+v).hidden = (v !== name);
+    });
+  }
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){ switchTab(t.dataset.tab); });
+  });
+
+  /* ---------------- Boot ---------------- */
+  function boot(){
+    var cached = cacheRead();
+    if (cached){ state = cached; ready = true; renderAll(); } else { renderAll(); }
+
+    renderSigninBanner();
+
+    var gisPoll = setInterval(function(){
+      if (initGis()){
+        clearInterval(gisPoll);
+        var savedToken = null;
+        try { savedToken = sessionStorage.getItem("basket_gtoken"); } catch(e){}
+        if (savedToken){
+          accessToken = savedToken;
+          onSignedIn();
+        } else {
+          ready = true;
         }
-
-        const li = document.createElement('li');
-        li.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-          item.done 
-            ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/60 opacity-60' 
-            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm'
-        }`;
-
-        li.innerHTML = `
-          <label class="flex items-center gap-3 flex-1 cursor-pointer select-none min-h-[30px]">
-            <input 
-              type="checkbox" 
-              ${item.done ? 'checked' : ''} 
-              onchange="toggleItem(${item.id})"
-              class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
-            >
-            <div class="flex flex-col">
-              <span class="text-base font-medium ${item.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}">
-                ${escapeHtml(item.text)}
-              </span>
-              <span class="text-xs text-slate-500 dark:text-slate-400">
-                Qty: ${itemQty} ${itemPrice > 0 ? `| R${itemPrice.toFixed(2)} ea (R${itemTotal.toFixed(2)})` : ''}
-              </span>
-            </div>
-          </label>
-          <button 
-            onclick="deleteItem(${item.id})" 
-            class="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 active:scale-90 transition-transform"
-            aria-label="Delete item"
-          >
-            ✕
-          </button>
-        `;
-        container.appendChild(li);
-      });
-
-      grandTotalEl.innerText = `R${totalCost.toFixed(2)}`;
-
-      if (shouldSaveToDrive) saveToDrive();
-    }
-
-    function addShoppingItem() {
-      const nameInput = document.getElementById('newItemName');
-      const priceInput = document.getElementById('newItemPrice');
-      const qtyInput = document.getElementById('newItemQty');
-
-      const text = nameInput.value.trim();
-      if (!text) return;
-
-      const price = parseFloat(priceInput.value) || 0;
-      const qty = parseInt(qtyInput.value, 10) || 1;
-
-      shoppingList.push({
-        id: Date.now(),
-        text: text,
-        price: price,
-        qty: qty,
-        done: false
-      });
-
-      nameInput.value = '';
-      priceInput.value = '';
-      qtyInput.value = '1';
-
-      renderShoppingList();
-    }
-
-    function toggleItem(id) {
-      shoppingList = shoppingList.map(item => item.id === id ? { ...item, done: !item.done } : item);
-      renderShoppingList();
-    }
-
-    function deleteItem(id) {
-      shoppingList = shoppingList.filter(item => item.id !== id);
-      renderShoppingList();
-    }
-
-    function clearCompletedItems() {
-      shoppingList = shoppingList.filter(item => !item.done);
-      renderShoppingList();
-    }
-
-    function clearAllItems() {
-      if (confirm('Clear all items?')) {
-        shoppingList = [];
-        renderShoppingList();
       }
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
-    }
-  </script>
+    }, 150);
+    setTimeout(function(){ clearInterval(gisPoll); }, 8000);
+  }
+  boot();
+})();
+</script>
 </body>
 </html>
