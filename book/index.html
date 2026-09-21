@@ -409,7 +409,7 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     root.innerHTML =
       '<div class="modal-overlay" id="bulkOverlay"><div class="modal">' +
       '<h2>Bulk import</h2>' +
-      '<p class="hint">Paste your whole document below. Mark the start of each story by putting <code>###</code> then the title on its own line, e.g.<br><code>### The summer we moved</code><br>Everything after that line, up to the next <code>###</code>, becomes that story\'s text. Anything before the first <code>###</code> is ignored.</p>' +
+      '<p class="hint">Paste your whole document below. Mark the start of each story by putting <code>###</code> then the title on its own line, e.g.<br><code>### The summer we moved</code><br>Everything after that line, up to the next marker, becomes that story\'s text. Anything before the first marker is ignored.<br><br>If you typed the <code>###</code> in Google Docs, check the preview below after pasting — Docs sometimes turns it into a heading and strips the actual # characters, in which case retype them directly in this box instead.</p>' +
       '<textarea id="bulkText" class="editor-field" style="min-height:220px; font-family:\'Lora\',Georgia,serif; font-size:14px" placeholder="### First story title\nText of the first story…\n\n### Second story title\nText of the second story…"></textarea>' +
       '<div id="bulkPreview" class="hint"></div>' +
       '<div class="modal-actions">' +
@@ -421,9 +421,14 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     var preview = document.getElementById("bulkPreview");
     textarea.addEventListener("input", function(){
       var parsed = parseBulkText(textarea.value);
-      preview.textContent = parsed.length
-        ? "Will create " + parsed.length + " " + (parsed.length===1?"story":"stories") + ": " + parsed.map(function(p){return p.title;}).join(", ")
-        : "No ### markers found yet.";
+      if (parsed.length){
+        preview.textContent = "Will create " + parsed.length + " " + (parsed.length===1?"story":"stories") + ": " + parsed.map(function(p){return p.title;}).join(", ");
+      } else if (textarea.value.trim()){
+        var firstLine = textarea.value.split("\n")[0].slice(0, 60);
+        preview.textContent = 'No "#", "##" or "###" markers found. First line as pasted: "' + firstLine + '" — if that was meant to be a title marker, retype the # symbols directly in this box rather than relying on what was pasted.';
+      } else {
+        preview.textContent = "";
+      }
     });
     document.getElementById("bulkCancel").onclick = function(){ root.innerHTML = ""; };
     document.getElementById("bulkOverlay").addEventListener("click", function(e){
@@ -431,7 +436,7 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     });
     document.getElementById("bulkConfirm").onclick = function(){
       var parsed = parseBulkText(textarea.value);
-      if (!parsed.length){ alert("No ### markers found — nothing to import."); return; }
+      if (!parsed.length){ alert("No #, ## or ### markers found — nothing to import. Check the preview text below the box for what was actually detected."); return; }
       parsed.forEach(function(p){
         state.stories.push({
           id: uid(), title: p.title, body: p.body, when:"", who:"", chapter:"", aiSummary:"", updatedAt: Date.now()
@@ -443,11 +448,20 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   }
 
   function parseBulkText(raw){
-    var lines = (raw||"").split("\n");
+    // Normalize characters that Google Docs / smart-formatting often substitutes
+    // or inserts invisibly, so a pasted "###" still matches even if it picked up
+    // curly quotes, non-breaking spaces, or zero-width characters around it.
+    var normalized = (raw||"")
+      .replace(/ /g, " ")           // non-breaking space -> regular space
+      .replace(/[​-‍﻿]/g, ""); // zero-width chars -> removed
+
+    var lines = normalized.split("\n");
     var stories = [];
     var current = null;
+    // Accept 1-3 #'s, optional space, and tolerate trailing/leading whitespace.
+    var marker = /^\s*#{1,3}\s*(.+?)\s*$/;
     lines.forEach(function(line){
-      var m = line.match(/^\s*###\s*(.+?)\s*$/);
+      var m = line.match(marker);
       if (m){
         if (current) stories.push(current);
         current = {title: m[1], body: ""};
