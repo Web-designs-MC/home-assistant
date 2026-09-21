@@ -4,40 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Grocery List</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'media',
-    }
-  </script>
+  <!-- Google Identity Services Library -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    /* Prevents pull-to-refresh on mobile browsers for a app-like feel */
-    body {
-      overscroll-behavior-y: contain;
-      -webkit-tap-highlight-color: transparent;
-    }
+    body { overscroll-behavior-y: contain; -webkit-tap-highlight-color: transparent; }
   </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex justify-center">
 
-  <!-- Mobile Screen Container -->
   <div id="tab-shopping" class="w-full max-w-md bg-white dark:bg-slate-900 min-h-screen flex flex-col justify-between p-4 shadow-xl select-none">
     
-    <!-- Top Section: Header, Progress & Input -->
     <div>
-      <!-- Header Bar -->
+      <!-- Header Bar & Sync Status -->
       <div class="flex items-center justify-between mt-2 mb-4">
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Grocery List</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Tap items to mark as completed</p>
+          <p id="driveStatus" class="text-xs text-slate-500 dark:text-slate-400">Drive status: Disconnected</p>
         </div>
-        <span id="shopProgress" class="text-xs font-semibold px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full">
-          0 / 0 done
-        </span>
+        <button id="authBtn" onclick="handleAuthClick()" class="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors">
+          Sync Drive
+        </button>
       </div>
 
-      <!-- Quick Add Input Form -->
+      <!-- Quick Add Form -->
       <form onsubmit="event.preventDefault(); addShoppingItem();" class="flex gap-2 mb-5">
         <input 
           type="text" 
@@ -58,40 +48,133 @@
         </button>
       </form>
 
-      <!-- Active & Completed Item List -->
-      <ul id="shoppingListContainer" class="space-y-2 mb-6">
-        <!-- List items rendered dynamically -->
-      </ul>
+      <!-- Shopping List -->
+      <ul id="shoppingListContainer" class="space-y-2 mb-6"></ul>
     </div>
 
-    <!-- Bottom Actions (Thumb-Zone Optimization) -->
+    <!-- Bottom Actions -->
     <div class="pt-4 pb-2 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-      <button 
-        onclick="clearCompletedItems()" 
-        class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98 text-center"
-      >
+      <button onclick="clearCompletedItems()" class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors active:scale-98">
         Clear Checked
       </button>
-      <button 
-        onclick="clearAllItems()" 
-        class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98 text-center"
-      >
+      <button onclick="clearAllItems()" class="py-3 px-4 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-98">
         Clear All
       </button>
     </div>
   </div>
 
-  <!-- Application Logic -->
   <script>
-    // State initialization with localStorage persistence
-    let shoppingList = JSON.parse(localStorage.getItem('grocery_items')) || [
-      { id: 1, text: 'Oat milk', done: false },
-      { id: 2, text: 'Avocados', done: true }
-    ];
+    // -------------------------------------------------------------
+    // CONFIGURATION: Google Client ID
+    // -------------------------------------------------------------
+    const CLIENT_ID = '620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-    function renderShoppingList() {
+    let tokenClient;
+    let accessToken = null;
+    let driveFileId = null;
+    let shoppingList = JSON.parse(localStorage.getItem('grocery_items')) || [];
+
+    // Initialize Google Auth Token Client
+    window.onload = () => {
+      renderShoppingList(false);
+      if (typeof google !== 'undefined') {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: async (resp) => {
+            if (resp.error) return;
+            accessToken = resp.access_token;
+            document.getElementById('driveStatus').innerText = 'Drive: Connected 🟢';
+            document.getElementById('authBtn').style.display = 'none';
+            await syncWithDrive();
+          },
+        });
+      }
+    };
+
+    function handleAuthClick() {
+      if (accessToken === null && tokenClient) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      }
+    }
+
+    // Google Drive REST API Operations
+    async function syncWithDrive() {
+      if (!accessToken) return;
+
+      try {
+        const searchRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=name='grocery-list.json' and trashed=false`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        const searchData = await searchRes.json();
+
+        if (searchData.files && searchData.files.length > 0) {
+          driveFileId = searchData.files[0].id;
+          const fileRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          const cloudList = await fileRes.json();
+          if (Array.isArray(cloudList)) {
+            shoppingList = cloudList;
+            renderShoppingList(false);
+          }
+        } else {
+          await createDriveFile();
+        }
+      } catch (err) {
+        console.error('Drive Sync Error:', err);
+      }
+    }
+
+    async function saveToDrive() {
+      if (!accessToken) return;
+
+      const fileData = JSON.stringify(shoppingList);
+      
+      if (!driveFileId) {
+        await createDriveFile();
+        return;
+      }
+
+      try {
+        await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: fileData,
+          }
+        );
+        document.getElementById('driveStatus').innerText = 'Drive: Saved ✓';
+      } catch (err) {
+        console.error('Save to Drive Error:', err);
+      }
+    }
+
+    async function createDriveFile() {
+      const metadata = { name: 'grocery-list.json', mimeType: 'application/json' };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', new Blob([JSON.stringify(shoppingList)], { type: 'application/json' }));
+
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: form,
+      });
+      const data = await res.json();
+      driveFileId = data.id;
+    }
+
+    // Shopping List App Logic
+    function renderShoppingList(shouldSaveToDrive = true) {
       const container = document.getElementById('shoppingListContainer');
-      const progress = document.getElementById('shopProgress');
       container.innerHTML = '';
 
       if (shoppingList.length === 0) {
@@ -100,11 +183,9 @@
             <span class="text-3xl">🛒</span>
             <span>Your list is currently empty</span>
           </li>`;
-        progress.innerText = '0 / 0 done';
         return;
       }
 
-      // Sort: Unchecked items remain at top, checked items move to bottom
       const sortedList = [...shoppingList].sort((a, b) => a.done - b.done);
 
       sortedList.forEach(item => {
@@ -138,32 +219,21 @@
         container.appendChild(li);
       });
 
-      const completedCount = shoppingList.filter(i => i.done).length;
-      progress.innerText = `${completedCount} / ${shoppingList.length} done`;
-      
-      // Save state
       localStorage.setItem('grocery_items', JSON.stringify(shoppingList));
+      if (shouldSaveToDrive) saveToDrive();
     }
 
     function addShoppingItem() {
       const input = document.getElementById('newShopItem');
       const value = input.value.trim();
       if (!value) return;
-
-      shoppingList.push({
-        id: Date.now(),
-        text: value,
-        done: false
-      });
-
+      shoppingList.push({ id: Date.now(), text: value, done: false });
       input.value = '';
       renderShoppingList();
     }
 
     function toggleItem(id) {
-      shoppingList = shoppingList.map(item => 
-        item.id === id ? { ...item, done: !item.done } : item
-      );
+      shoppingList = shoppingList.map(item => item.id === id ? { ...item, done: !item.done } : item);
       renderShoppingList();
     }
 
@@ -178,20 +248,15 @@
     }
 
     function clearAllItems() {
-      if (confirm('Are you sure you want to clear the entire list?')) {
+      if (confirm('Clear all items?')) {
         shoppingList = [];
         renderShoppingList();
       }
     }
 
     function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-      }[m]));
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
     }
-
-    // Initial load
-    renderShoppingList();
   </script>
 </body>
 </html>
