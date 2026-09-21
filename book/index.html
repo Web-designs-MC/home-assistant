@@ -122,6 +122,7 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
         <input id="newTitle" placeholder="New story or memory title…" autocomplete="off" />
         <button id="newBtn" aria-label="Add">+</button>
       </div>
+      <button class="secondary-btn" id="bulkImportOpenBtn" style="width:100%; margin-bottom:14px">⇪ Bulk import from a document</button>
       <div id="storyList"></div>
     </div>
 
@@ -395,6 +396,64 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   document.getElementById("newTitle").addEventListener("keydown", function(e){
     if (e.key === "Enter"){ e.preventDefault(); document.getElementById("newBtn").click(); }
   });
+
+  /* ================= Bulk import ================= */
+  document.getElementById("bulkImportOpenBtn").addEventListener("click", openBulkImport);
+
+  function openBulkImport(){
+    var root = document.getElementById("modalRoot");
+    root.innerHTML =
+      '<div class="modal-overlay" id="bulkOverlay"><div class="modal">' +
+      '<h2>Bulk import</h2>' +
+      '<p class="hint">Paste your whole document below. Mark the start of each story by putting <code>###</code> then the title on its own line, e.g.<br><code>### The summer we moved</code><br>Everything after that line, up to the next <code>###</code>, becomes that story\'s text. Anything before the first <code>###</code> is ignored.</p>' +
+      '<textarea id="bulkText" class="editor-field" style="min-height:220px; font-family:\'Lora\',Georgia,serif; font-size:14px" placeholder="### First story title\nText of the first story…\n\n### Second story title\nText of the second story…"></textarea>' +
+      '<div id="bulkPreview" class="hint"></div>' +
+      '<div class="modal-actions">' +
+      '<button class="secondary-btn" id="bulkCancel">Cancel</button>' +
+      '<button class="primary-btn" id="bulkConfirm">Import stories</button>' +
+      '</div></div></div>';
+
+    var textarea = document.getElementById("bulkText");
+    var preview = document.getElementById("bulkPreview");
+    textarea.addEventListener("input", function(){
+      var parsed = parseBulkText(textarea.value);
+      preview.textContent = parsed.length
+        ? "Will create " + parsed.length + " " + (parsed.length===1?"story":"stories") + ": " + parsed.map(function(p){return p.title;}).join(", ")
+        : "No ### markers found yet.";
+    });
+    document.getElementById("bulkCancel").onclick = function(){ root.innerHTML = ""; };
+    document.getElementById("bulkOverlay").addEventListener("click", function(e){
+      if (e.target.id === "bulkOverlay") root.innerHTML = "";
+    });
+    document.getElementById("bulkConfirm").onclick = function(){
+      var parsed = parseBulkText(textarea.value);
+      if (!parsed.length){ alert("No ### markers found — nothing to import."); return; }
+      parsed.forEach(function(p){
+        state.stories.push({
+          id: uid(), title: p.title, body: p.body, when:"", who:"", chapter:"", aiSummary:"", updatedAt: Date.now()
+        });
+      });
+      save();
+      root.innerHTML = "";
+    };
+  }
+
+  function parseBulkText(raw){
+    var lines = (raw||"").split("\n");
+    var stories = [];
+    var current = null;
+    lines.forEach(function(line){
+      var m = line.match(/^\s*###\s*(.+?)\s*$/);
+      if (m){
+        if (current) stories.push(current);
+        current = {title: m[1], body: ""};
+      } else if (current){
+        current.body += (current.body ? "\n" : "") + line;
+      }
+    });
+    if (current) stories.push(current);
+    return stories.map(function(s){ return {title: s.title, body: s.body.trim()}; }).filter(function(s){ return s.title; });
+  }
 
   /* ================= Editor ================= */
   function fillChapterSelect(sel, currentVal){
