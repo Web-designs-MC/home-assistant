@@ -178,6 +178,8 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   ========================================================= */
   var GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
   var DRIVE_FILE_NAME = "chapters-app-data.json";
+  // The Drive folder Book's data file lives in. Leave "" to store at the root of My Drive.
+  var DRIVE_FOLDER_ID = "1_1VuaF64g4P1Gs1pFY_jWMaGpnTdh3LX";
   var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
   // Paste your own Anthropic API key here to enable the AI features (summaries,
   // overlap detection, chapter ordering). Everything else works without it.
@@ -264,12 +266,14 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     return fetch(url, opts);
   }
   function findOrCreateFile(){
-    var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
-    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=drive&fields=files(id,name)")
+    var q = "name='" + DRIVE_FILE_NAME + "' and trashed=false";
+    if (DRIVE_FOLDER_ID) q += " and '" + DRIVE_FOLDER_ID + "' in parents";
+    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent(q) + "&spaces=drive&fields=files(id,name)")
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data.files && data.files.length) return data.files[0].id;
         var metadata = {name: DRIVE_FILE_NAME, mimeType: "application/json"};
+        if (DRIVE_FOLDER_ID) metadata.parents = [DRIVE_FOLDER_ID];
         var boundary = "chapters_boundary_" + uid();
         var body = "--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
           "\r\n--"+boundary+"\r\nContent-Type: application/json\r\n\r\n"+JSON.stringify(cloneDefault())+"\r\n--"+boundary+"--";
