@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Book</title>
+<style>
+:root{
+  --bg:#f7f4ee; --surface:#ffffff; --ink:#2a241d; --ink-dim:#6b604f90;
+  --line:#e6ddcc; --accent:#8a5a3f; --accent-ink:#ffffff;
+  --danger:#a8503d; --chip:#efe6d4; --warn:#b8863f;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1b1815; --surface:#242018; --ink:#ede4d6; --ink-dim:#ede4d690;
+    --line:#3a3226; --accent:#c98a5f; --accent-ink:#1b1815;
+    --danger:#e08871; --chip:#2c2619; --warn:#d6a75f;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Source Sans 3',system-ui,-apple-system,sans-serif;
+  padding:0 16px; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  display:flex; flex-direction:column;
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap');
+h1,h2,h3{font-family:'Lora',Georgia,serif; margin:0}
+.app{max-width:640px; margin:0 auto; width:100%; display:flex; flex-direction:column; min-height:100%; flex:1}
+header{position:sticky; top:0; background:var(--bg); padding-top:18px; padding-bottom:10px; z-index:5; border-bottom:1px solid var(--line)}
+header .top{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+h1{font-size:26px; font-style:italic; color:var(--accent)}
+.count{font-size:12px; color:var(--ink-dim); font-weight:500}
+.tabs{display:flex; gap:6px; margin-top:12px; overflow-x:auto; padding-bottom:2px}
+.tab{border:none; background:var(--chip); color:var(--ink-dim); font:inherit; font-weight:600; font-size:13px; padding:7px 14px; border-radius:999px; cursor:pointer; white-space:nowrap; flex:none}
+.tab.active{background:var(--accent); color:var(--accent-ink)}
+
+.signin-banner{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--chip); border-radius:12px; padding:10px 14px; margin:12px 0; font-size:13px}
+.signin-banner button{border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700; font-size:12px; padding:8px 12px; border-radius:8px; cursor:pointer; flex:none}
+.account{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-dim)}
+.account button{background:none; border:none; color:var(--ink-dim); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
+
+main{flex:1; padding-bottom:24px; overflow-y:auto}
+footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 20px}
+
+.primary-btn{border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700; font-size:14px; padding:11px 18px; border-radius:12px; cursor:pointer}
+.primary-btn:disabled{opacity:.5; cursor:default}
+.secondary-btn{border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-weight:600; font-size:13px; padding:9px 14px; border-radius:10px; cursor:pointer}
+.hint{font-size:12px; color:var(--ink-dim); line-height:1.5; margin:8px 0 12px}
+
+/* Stories list */
+.storycard{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:10px; cursor:pointer}
+.storycard h3{font-size:17px; margin-bottom:4px}
+.storycard .meta{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+.pill{font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--chip); color:var(--ink-dim)}
+.pill.chapter{background:var(--accent); color:var(--accent-ink)}
+.storycard .preview{font-size:13px; color:var(--ink-dim); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.storycard .aisum{font-size:12.5px; color:var(--ink); line-height:1.5; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-style:italic}
+.storycard .wc{font-size:11px; color:var(--ink-dim); margin-top:6px; font-variant-numeric: tabular-nums}
+
+.newbar{display:flex; gap:8px; padding:14px 0}
+.newbar input{flex:1; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:15px; padding:12px 14px; border-radius:12px}
+.newbar button{border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700; font-size:20px; width:44px; border-radius:12px; cursor:pointer; flex:none}
+
+/* Editor */
+.editor-wrap{padding:14px 0}
+.editor-field{width:100%; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; padding:12px 14px; border-radius:12px; margin-bottom:10px}
+.editor-title{font-size:19px; font-family:'Lora',Georgia,serif; font-weight:600}
+.editor-body{min-height:50vh; font-size:16px; line-height:1.7; resize:vertical; font-family:'Lora',Georgia,serif}
+.editor-meta-row{display:flex; gap:8px; flex-wrap:wrap}
+.editor-meta-row input, .editor-meta-row select{flex:1; min-width:120px; font-size:13px; padding:9px 11px}
+.editor-actions{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap}
+.wc-live{font-size:12px; color:var(--ink-dim); text-align:right; margin-top:-4px; margin-bottom:10px}
+
+.aibox{background:var(--chip); border-radius:12px; padding:14px; margin-top:14px}
+.aibox h4{font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-dim); margin-bottom:8px; font-family:'Source Sans 3',sans-serif}
+.aibox .out{font-size:14px; line-height:1.6; white-space:pre-wrap}
+.aibox .loading{font-size:13px; color:var(--ink-dim); font-style:italic}
+
+/* Chapters/order view */
+.chaplist{padding:14px 0}
+.chapgroup{margin-bottom:20px}
+.chapgroup h2{font-size:15px; color:var(--accent); margin-bottom:8px; display:flex; align-items:center; gap:8px}
+.storymini{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:6px; font-size:14px}
+.storymini .drag{color:var(--ink-dim); cursor:grab; flex:none}
+.unassigned{opacity:.85}
+
+.overlapcard{background:var(--surface); border:1px solid var(--warn); border-radius:12px; padding:14px; margin-bottom:10px}
+.overlapcard .titles{font-weight:700; font-size:14px; margin-bottom:6px}
+.overlapcard .why{font-size:13px; color:var(--ink-dim); line-height:1.5}
+
+.keysetup{background:var(--surface); border:1px dashed var(--line); border-radius:12px; padding:14px; margin:14px 0; font-size:13px; line-height:1.6}
+.keysetup input{width:100%; margin-top:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:13px; padding:9px 11px; border-radius:8px}
+
+.modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50}
+.modal{background:var(--surface); width:100%; max-width:640px; border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px)); max-height:82vh; overflow-y:auto}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="top">
+      <h1>Book</h1>
+      <span class="count"><span id="syncStatus" style="color:var(--accent)"></span><span id="wcTotal"></span></span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="stories">Stories</button>
+      <button class="tab" data-tab="order">Chapter Order</button>
+      <button class="tab" data-tab="overlaps">Overlaps</button>
+    </div>
+    <div id="signinBanner"></div>
+  </header>
+
+  <main>
+    <div id="view-stories">
+      <div class="newbar">
+        <input id="newTitle" placeholder="New story or memory title…" autocomplete="off" />
+        <button id="newBtn" aria-label="Add">+</button>
+      </div>
+      <div id="storyList"></div>
+    </div>
+
+    <div id="view-editor" hidden>
+      <button class="secondary-btn" id="backBtn">← Back to stories</button>
+      <div class="editor-wrap">
+        <input class="editor-field editor-title" id="editTitle" placeholder="Title" />
+        <div class="editor-meta-row" style="margin-bottom:10px">
+          <input class="editor-field" id="editWhen" placeholder="When (e.g. Summer 2003)" />
+          <input class="editor-field" id="editWho" placeholder="Who (e.g. Mom, Grandpa)" />
+          <select class="editor-field" id="editChapter"></select>
+        </div>
+        <textarea class="editor-field editor-body" id="editBody" placeholder="Write the story…"></textarea>
+        <div class="wc-live" id="liveWc"></div>
+        <div class="editor-actions">
+          <button class="primary-btn" id="summarizeBtn">✦ Summarize this story</button>
+          <button class="secondary-btn" id="deleteStoryBtn">Delete</button>
+        </div>
+        <div class="aibox" id="storyAiBox" hidden>
+          <h4>AI summary</h4>
+          <div class="out" id="storyAiOut"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-order" hidden>
+      <p class="hint">Drag stories between chapters, or let AI suggest a first pass.</p>
+      <button class="primary-btn" id="suggestOrderBtn" style="width:100%; margin-bottom:14px">✦ Suggest a chapter order</button>
+      <div id="orderAiBox" class="aibox" hidden><h4>Suggestion</h4><div class="out" id="orderAiOut"></div></div>
+      <div class="chaplist" id="chapterView"></div>
+    </div>
+
+    <div id="view-overlaps" hidden>
+      <p class="hint">Find stories that might be telling the same memory twice, or covering the same time/people.</p>
+      <button class="primary-btn" id="findOverlapsBtn" style="width:100%; margin-bottom:14px">✦ Check for overlaps</button>
+      <div id="overlapsOut"></div>
+    </div>
+  </main>
+
+  <div id="apiKeySetup"></div>
+  <footer>Saved to your Google Drive · AI features use your own Anthropic key</footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     CONFIG
+  ========================================================= */
+  var GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
+  var DRIVE_FILE_NAME = "chapters-app-data.json";
+  var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+  // Paste your own Anthropic API key here to enable the AI features (summaries,
+  // overlap detection, chapter ordering). Everything else works without it.
+  var ANTHROPIC_API_KEY = "";
+  var ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929";
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function wordCount(text){
+    var t = (text||"").trim();
+    return t ? t.split(/\s+/).length : 0;
+  }
+
+  var defaultState = {
+    stories: [], // {id, title, body, when, who, chapter, aiSummary, updatedAt}
+    chapters: [] // {id, name}
+  };
+  function cloneDefault(){ return JSON.parse(JSON.stringify(defaultState)); }
+  function normalize(p){
+    p = p || {};
+    return {
+      stories: Array.isArray(p.stories) ? p.stories : [],
+      chapters: Array.isArray(p.chapters) ? p.chapters : []
+    };
+  }
+
+  var state = cloneDefault();
+  var ready = false;
+  var currentStoryId = null;
+
+  function cacheRead(){
+    try { var raw = localStorage.getItem("chapters_cache_v1"); return raw ? normalize(JSON.parse(raw)) : null; }
+    catch(e){ return null; }
+  }
+  function cacheWrite(){ try { localStorage.setItem("chapters_cache_v1", JSON.stringify(state)); } catch(e){} }
+  function setStatus(t){ var el = document.getElementById("syncStatus"); if (el) el.textContent = t; }
+
+  /* ================= Google Sign-In + Drive persistence (same pattern as Basket) ================= */
+  var tokenClient = null, accessToken = null, driveFileId = null, saveTimer = null;
+
+  function initGis(){
+    if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: function(resp){
+        if (resp && resp.access_token){
+          accessToken = resp.access_token;
+          try { sessionStorage.setItem("chapters_gtoken", accessToken); } catch(e){}
+          onSignedIn();
+        }
+      }
+    });
+    return true;
+  }
+
+  function renderSigninBanner(){
+    var el = document.getElementById("signinBanner");
+    if (accessToken){
+      el.innerHTML = '<div class="account"><span>✓ Synced to Google Drive</span><button id="signOutBtn">Sign out</button></div>';
+      document.getElementById("signOutBtn").onclick = signOut;
+    } else {
+      el.innerHTML = '<div class="signin-banner"><span>Sign in to save your writing to Google Drive.</span><button id="signInBtn">Sign in</button></div>';
+      document.getElementById("signInBtn").onclick = function(){
+        if (tokenClient) tokenClient.requestAccessToken({prompt:"consent"});
+      };
+    }
+  }
+  function signOut(){
+    if (accessToken && window.google && google.accounts && google.accounts.oauth2){
+      google.accounts.oauth2.revoke(accessToken, function(){});
+    }
+    accessToken = null; driveFileId = null;
+    try { sessionStorage.removeItem("chapters_gtoken"); } catch(e){}
+    renderSigninBanner();
+  }
+  function driveFetch(url, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({Authorization: "Bearer " + accessToken}, opts.headers || {});
+    return fetch(url, opts);
+  }
+  function findOrCreateFile(){
+    var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
+    return driveFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=drive&fields=files(id,name)")
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.files && data.files.length) return data.files[0].id;
+        var metadata = {name: DRIVE_FILE_NAME, mimeType: "application/json"};
+        var boundary = "chapters_boundary_" + uid();
+        var body = "--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
+          "\r\n--"+boundary+"\r\nContent-Type: application/json\r\n\r\n"+JSON.stringify(cloneDefault())+"\r\n--"+boundary+"--";
+        return driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
+          method:"POST", headers:{"Content-Type":'multipart/related; boundary="'+boundary+'"'}, body: body
+        }).then(function(r){return r.json();}).then(function(f){return f.id;});
+      });
+  }
+  function driveRead(fileId){
+    return driveFetch("https://www.googleapis.com/drive/v3/files/"+fileId+"?alt=media")
+      .then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+  }
+  function driveWrite(fileId, data){
+    return driveFetch("https://www.googleapis.com/upload/drive/v3/files/"+fileId+"?uploadType=media", {
+      method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data)
+    });
+  }
+  function onSignedIn(){
+    renderSigninBanner();
+    setStatus("Connecting…");
+    findOrCreateFile().then(function(id){ driveFileId = id; return driveRead(id); })
+      .then(function(remote){
+        var cached = cacheRead();
+        if (remote) state = normalize(remote);
+        else if (cached) state = cached;
+        ready = true; renderAll(); cacheWrite();
+        setStatus("Saved"); setTimeout(function(){setStatus("");}, 1200);
+      }).catch(function(){ setStatus("Couldn't connect"); });
+  }
+  function save(){
+    cacheWrite();
+    if (!ready) return;
+    renderAll();
+    if (!accessToken || !driveFileId) return;
+    clearTimeout(saveTimer);
+    setStatus("Saving…");
+    saveTimer = setTimeout(function(){
+      driveWrite(driveFileId, state).then(function(r){
+        if (r.ok){ setStatus("Saved"); setTimeout(function(){setStatus("");}, 1200); }
+        else setStatus("Couldn't save");
+      }).catch(function(){ setStatus("Couldn't save"); });
+    }, 600);
+  }
+
+  /* ================= AI (Anthropic API) ================= */
+  function aiAvailable(){ return !!ANTHROPIC_API_KEY; }
+
+  function askClaude(prompt){
+    return fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        messages: [{role:"user", content: prompt}]
+      })
+    }).then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data && data.content && data.content[0] && data.content[0].text) return data.content[0].text;
+        throw new Error((data && data.error && data.error.message) || "AI request failed");
+      });
+  }
+
+  function renderKeySetup(){
+    var el = document.getElementById("apiKeySetup");
+    if (aiAvailable()){ el.innerHTML = ""; return; }
+    el.innerHTML = '<div class="keysetup">✦ AI features (summaries, overlap detection, chapter ordering) need an Anthropic API key. ' +
+      'Get one free at <strong>console.anthropic.com</strong> → API Keys, then paste it into the <code>ANTHROPIC_API_KEY</code> line near the top of this file\'s code and re-save. ' +
+      'Everything else in the app works without it.</div>';
+  }
+
+  /* ================= Stories list ================= */
+  function renderAll(){
+    renderStoryList(); renderWc(); renderChapterView(); renderKeySetup();
+  }
+
+  function renderWc(){
+    var total = state.stories.reduce(function(s, st){ return s + wordCount(st.body); }, 0);
+    document.getElementById("wcTotal").textContent = total ? total.toLocaleString() + " words" : "";
+  }
+
+  function renderStoryList(){
+    var el = document.getElementById("storyList");
+    if (!state.stories.length){
+      el.innerHTML = '<p class="hint">No stories yet — add a title above to start your first one.</p>';
+      return;
+    }
+    var sorted = state.stories.slice().sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+    el.innerHTML = sorted.map(function(s){
+      var chap = state.chapters.find(function(c){return c.id === s.chapter;});
+      return '<div class="storycard" data-id="'+s.id+'">'
+        + '<h3>'+escapeHtml(s.title||"Untitled")+'</h3>'
+        + '<div class="meta">'
+          + (chap ? '<span class="pill chapter">'+escapeHtml(chap.name)+'</span>' : '<span class="pill">Unassigned</span>')
+          + (s.when ? '<span class="pill">'+escapeHtml(s.when)+'</span>' : '')
+          + (s.who ? '<span class="pill">'+escapeHtml(s.who)+'</span>' : '')
+        + '</div>'
+        + '<div class="preview">'+escapeHtml((s.body||"").slice(0,220) || "Empty so far…")+'</div>'
+        + (s.aiSummary ? '<div class="aisum">'+escapeHtml(s.aiSummary)+'</div>' : '')
+        + '<div class="wc">'+wordCount(s.body)+' words</div>'
+        + '</div>';
+    }).join("");
+  }
+  document.getElementById("storyList").addEventListener("click", function(e){
+    var card = e.target.closest(".storycard"); if (!card) return;
+    openEditor(card.getAttribute("data-id"));
+  });
+
+  document.getElementById("newBtn").addEventListener("click", function(){
+    var inp = document.getElementById("newTitle");
+    var title = inp.value.trim();
+    if (!title) return;
+    var s = {id: uid(), title: title, body:"", when:"", who:"", chapter:"", aiSummary:"", updatedAt: Date.now()};
+    state.stories.push(s);
+    save();
+    inp.value = "";
+    openEditor(s.id);
+  });
+  document.getElementById("newTitle").addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); document.getElementById("newBtn").click(); }
+  });
+
+  /* ================= Editor ================= */
+  function fillChapterSelect(sel, currentVal){
+    sel.innerHTML = '<option value="">No chapter yet</option>' +
+      state.chapters.map(function(c){ return '<option value="'+c.id+'"'+(c.id===currentVal?' selected':'')+'>'+escapeHtml(c.name)+'</option>'; }).join("");
+  }
+
+  function openEditor(id){
+    var s = state.stories.find(function(x){return x.id===id;});
+    if (!s) return;
+    currentStoryId = id;
+    document.getElementById("editTitle").value = s.title || "";
+    document.getElementById("editWhen").value = s.when || "";
+    document.getElementById("editWho").value = s.who || "";
+    fillChapterSelect(document.getElementById("editChapter"), s.chapter);
+    document.getElementById("editBody").value = s.body || "";
+    document.getElementById("liveWc").textContent = wordCount(s.body) + " words";
+    var box = document.getElementById("storyAiBox");
+    if (s.aiSummary){ box.hidden = false; document.getElementById("storyAiOut").textContent = s.aiSummary; }
+    else { box.hidden = true; }
+    switchTab("editor-view");
+  }
+
+  function currentStory(){ return state.stories.find(function(x){return x.id===currentStoryId;}); }
+
+  var editSaveTimer = null;
+  function scheduleStorySave(){
+    clearTimeout(editSaveTimer);
+    editSaveTimer = setTimeout(function(){
+      var s = currentStory(); if (!s) return;
+      s.title = document.getElementById("editTitle").value;
+      s.when = document.getElementById("editWhen").value;
+      s.who = document.getElementById("editWho").value;
+      s.chapter = document.getElementById("editChapter").value;
+      s.body = document.getElementById("editBody").value;
+      s.updatedAt = Date.now();
+      save();
+    }, 500);
+  }
+  ["editTitle","editWhen","editWho","editChapter"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", scheduleStorySave);
+    document.getElementById(id).addEventListener("change", scheduleStorySave);
+  });
+  document.getElementById("editBody").addEventListener("input", function(){
+    document.getElementById("liveWc").textContent = wordCount(this.value) + " words";
+    scheduleStorySave();
+  });
+
+  document.getElementById("backBtn").addEventListener("click", function(){
+    switchTab("stories"); currentStoryId = null;
+  });
+  document.getElementById("deleteStoryBtn").addEventListener("click", function(){
+    if (!confirm("Delete this story? This can't be undone.")) return;
+    state.stories = state.stories.filter(function(s){return s.id !== currentStoryId;});
+    save(); switchTab("stories"); currentStoryId = null;
+  });
+
+  document.getElementById("summarizeBtn").addEventListener("click", function(){
+    var s = currentStory(); if (!s) return;
+    if (!aiAvailable()){ alert("Add your Anthropic API key first (see the note at the bottom of the app)."); return; }
+    if (!s.body || !s.body.trim()){ alert("Write something first."); return; }
+    var box = document.getElementById("storyAiBox"), out = document.getElementById("storyAiOut");
+    box.hidden = false; out.innerHTML = '<span class="loading">Reading…</span>';
+    var prompt = "This is one story/memory from a memoir. Write a 2-3 sentence summary capturing what happens, who's involved, and why it might matter emotionally. Be concrete, not generic.\n\nTitle: " + (s.title||"") + "\n\n" + s.body;
+    askClaude(prompt).then(function(text){
+      s.aiSummary = text.trim();
+      s.updatedAt = Date.now();
+      out.textContent = s.aiSummary;
+      save();
+    }).catch(function(err){
+      out.textContent = "Couldn't get a summary: " + err.message;
+    });
+  });
+
+  /* ================= Chapter order ================= */
+  function renderChapterView(){
+    var el = document.getElementById("chapterView");
+    var grouped = {};
+    state.chapters.forEach(function(c){ grouped[c.id] = []; });
+    var unassigned = [];
+    state.stories.forEach(function(s){
+      if (s.chapter && grouped[s.chapter]) grouped[s.chapter].push(s);
+      else unassigned.push(s);
+    });
+    var html = "";
+    state.chapters.forEach(function(c){
+      html += '<div class="chapgroup"><h2>'+escapeHtml(c.name)+' <button class="secondary-btn" data-act="delchap" data-id="'+c.id+'" style="margin-left:auto;font-size:11px;padding:4px 8px">Remove chapter</button></h2>';
+      if (!grouped[c.id].length) html += '<p class="hint">No stories assigned yet.</p>';
+      grouped[c.id].forEach(function(s){
+        html += '<div class="storymini" data-id="'+s.id+'"><span class="drag">☰</span><span>'+escapeHtml(s.title)+'</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '<div class="chapgroup unassigned"><h2>Unassigned</h2>';
+    if (!unassigned.length) html += '<p class="hint">Everything\'s assigned to a chapter.</p>';
+    unassigned.forEach(function(s){
+      html += '<div class="storymini" data-id="'+s.id+'"><span class="drag">☰</span><span>'+escapeHtml(s.title)+'</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="newbar"><input id="newChapterName" placeholder="New chapter name…" /><button id="addChapterBtn">+</button></div>';
+    el.innerHTML = html;
+
+    document.getElementById("addChapterBtn").onclick = function(){
+      var inp = document.getElementById("newChapterName");
+      var name = inp.value.trim(); if (!name) return;
+      state.chapters.push({id: uid(), name: name});
+      save(); inp.value = "";
+    };
+    el.querySelectorAll('[data-act="delchap"]').forEach(function(btn){
+      btn.onclick = function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute("data-id");
+        state.chapters = state.chapters.filter(function(c){return c.id!==id;});
+        state.stories.forEach(function(s){ if (s.chapter === id) s.chapter = ""; });
+        save();
+      };
+    });
+    el.querySelectorAll(".storymini").forEach(function(row){
+      row.onclick = function(){ openEditor(row.getAttribute("data-id")); };
+    });
+  }
+
+  document.getElementById("suggestOrderBtn").addEventListener("click", function(){
+    if (!aiAvailable()){ alert("Add your Anthropic API key first (see the note at the bottom of the app)."); return; }
+    if (state.stories.length < 2){ alert("Add a few stories first."); return; }
+    var box = document.getElementById("orderAiBox"), out = document.getElementById("orderAiOut");
+    box.hidden = false; out.innerHTML = '<span class="loading">Thinking through your stories…</span>';
+    var list = state.stories.map(function(s, i){
+      return (i+1)+". \""+s.title+"\"" + (s.when?" ("+s.when+")":"") + (s.who?" — "+s.who:"") +
+        (s.aiSummary ? ": " + s.aiSummary : (s.body ? ": " + s.body.slice(0,200) : ": (empty)"));
+    }).join("\n");
+    var prompt = "Here are the stories/memories in a memoir-in-progress, unordered. Suggest a sensible way to group them into chapters (by theme, timeline, or narrative arc — whichever fits best) and a rough order. Be specific about which stories go where and briefly say why. Keep it to a few short paragraphs or a compact list.\n\n" + list;
+    askClaude(prompt).then(function(text){
+      out.textContent = text.trim();
+    }).catch(function(err){ out.textContent = "Couldn't get a suggestion: " + err.message; });
+  });
+
+  /* ================= Overlaps ================= */
+  document.getElementById("findOverlapsBtn").addEventListener("click", function(){
+    if (!aiAvailable()){ alert("Add your Anthropic API key first (see the note at the bottom of the app)."); return; }
+    if (state.stories.length < 2){ alert("Add a few stories first."); return; }
+    var el = document.getElementById("overlapsOut");
+    el.innerHTML = '<p class="hint">Comparing your stories…</p>';
+    var list = state.stories.map(function(s, i){
+      return (i+1)+". \""+s.title+"\"" + (s.when?" ("+s.when+")":"") + (s.who?" — "+s.who:"") +
+        (s.aiSummary ? ": " + s.aiSummary : (s.body ? ": " + s.body.slice(0,250) : ": (empty)"));
+    }).join("\n");
+    var prompt = "Here are stories/memories from a memoir-in-progress. Look for pairs or groups that might be telling the same memory twice, covering the same event from different angles, or overlapping heavily in time period and people. For each overlap you find, name the stories involved and briefly explain why they overlap. If there are no real overlaps, say so plainly. Respond as a short list, one overlap per item, format: \"Story A\" & \"Story B\": reason.\n\n" + list;
+    askClaude(prompt).then(function(text){
+      var lines = text.trim().split(/\n+/).filter(Boolean);
+      el.innerHTML = lines.map(function(line){
+        var m = line.match(/^(.*?):\s*(.*)$/);
+        if (m){
+          return '<div class="overlapcard"><div class="titles">'+escapeHtml(m[1].replace(/^[-*\d.\s]+/,""))+'</div><div class="why">'+escapeHtml(m[2])+'</div></div>';
+        }
+        return '<div class="overlapcard"><div class="why">'+escapeHtml(line)+'</div></div>';
+      }).join("");
+    }).catch(function(err){
+      el.innerHTML = '<p class="hint">Couldn\'t check for overlaps: '+escapeHtml(err.message)+'</p>';
+    });
+  });
+
+  /* ================= Tabs ================= */
+  function switchTab(name){
+    var isEditor = name === "editor-view";
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.classList.toggle("active", !isEditor && t.dataset.tab === name);
+    });
+    ["stories","order","overlaps"].forEach(function(v){
+      document.getElementById("view-"+v).hidden = isEditor || v !== name;
+    });
+    document.getElementById("view-editor").hidden = !isEditor;
+  }
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){ switchTab(t.dataset.tab); });
+  });
+
+  /* ================= Boot ================= */
+  function boot(){
+    var cached = cacheRead();
+    if (cached){ state = cached; ready = true; renderAll(); } else { renderAll(); }
+    renderSigninBanner();
+    var gisPoll = setInterval(function(){
+      if (initGis()){
+        clearInterval(gisPoll);
+        var savedToken = null;
+        try { savedToken = sessionStorage.getItem("chapters_gtoken"); } catch(e){}
+        if (savedToken){ accessToken = savedToken; onSignedIn(); } else { ready = true; }
+      }
+    }, 150);
+    setTimeout(function(){ clearInterval(gisPoll); }, 8000);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
