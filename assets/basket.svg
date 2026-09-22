@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="128" height="128" fill="none" stroke="#526575" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
   <!-- Soft pastel color fills -->
   <path d="M2.5 4h2l2.68 10.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L21.5 7H6" fill="#E2EDE4" />
+  
   <!-- Accent item inside the cart -->
   <rect x="14" y="8" width="4" height="3" rx="1" fill="#F4D6CD" stroke="#526575" stroke-width="1.5" />
   
