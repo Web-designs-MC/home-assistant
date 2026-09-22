@@ -476,9 +476,9 @@
    one Drive file really is the whole app.
 
    Auth: Google Identity Services token-client flow. The access token
-   lives in memory + a sessionStorage copy (so a refresh doesn't force
-   re-login, but nothing survives closing the tab) — same as Basket
-   and Book. Talks to the Drive REST API directly with fetch.
+   lives in memory + a localStorage copy (so closing the tab or the
+   browser doesn't force a fresh sign-in — only the token's own ~1
+   hour expiry does). Talks to the Drive REST API directly with fetch.
 
    save() does three things in order:
      1. re-render whatever's on screen (optimistic)
@@ -499,7 +499,7 @@ const PHOTO_QUALITY = 0.72;
 
 const GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
-const TOKEN_SESSION_KEY = "home-improvements-drive-token";
+const TOKEN_STORAGE_KEY = "home-improvements-drive-token";
 
 const fmtCurrency = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 2 });
 
@@ -526,14 +526,14 @@ function assetUrl(dataUrl) { return dataUrl; } // photos live as data: URLs insi
 
 /* ---------------------------------------------------------------------
    Boot: paint immediately, wire up the sign-in button, and try to
-   resume a session from sessionStorage's cached token (no app-data
-   caching — only the auth token, exactly like Basket/Book).
+   resume a session from localStorage's cached token (no app-data
+   caching — only the auth token).
    --------------------------------------------------------------------- */
 function boot() {
   renderAll();
   el('signInBtn').addEventListener('click', signIn);
 
-  const cached = sessionStorage.getItem(TOKEN_SESSION_KEY);
+  const cached = localStorage.getItem(TOKEN_STORAGE_KEY);
   if (cached) {
     try {
       const { token, expiresAt } = JSON.parse(cached);
@@ -561,7 +561,7 @@ window.addEventListener('load', () => {
       if (resp.error) { setSyncStatus('error'); updateOfflineBanner('error'); return; }
       accessToken = resp.access_token;
       const expiresAt = Date.now() + (Number(resp.expires_in) || 3600) * 1000 - 60000;
-      try { sessionStorage.setItem(TOKEN_SESSION_KEY, JSON.stringify({ token: accessToken, expiresAt })); } catch (e) {}
+      try { localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({ token: accessToken, expiresAt })); } catch (e) {}
       onSignedIn();
     }
   });
@@ -586,7 +586,7 @@ function authHeaders(extra) {
 }
 async function driveFetch(url, opts) {
   const res = await fetch(url, opts);
-  if (res.status === 401) { accessToken = null; sessionStorage.removeItem(TOKEN_SESSION_KEY); throw { code: 'needs_reauth' }; }
+  if (res.status === 401) { accessToken = null; localStorage.removeItem(TOKEN_STORAGE_KEY); throw { code: 'needs_reauth' }; }
   if (!res.ok) throw { code: 'error', status: res.status, body: await res.text().catch(() => '') };
   return res;
 }
