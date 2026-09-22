@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Basket</title>
+<!-- App Icon / Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='512' height='512' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CclipPath id='squircle'%3E%3Cpath d='M256 0C90 0 0 90 0 256s90 256 256 256 256-90 256-256S422 0 256 0z'/%3E%3C/clipPath%3E%3C/defs%3E%3Crect width='512' height='512' fill='%233f6b4f' clip-path='url(%23squircle)'/%3E%3Cg clip-path='url(%23squircle)' fill='none' stroke='%23faf7f2' stroke-width='20' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M120 130 h34 l22 210 h214'/%3E%3Cpath d='M176 190 h256 l-30 118 H206 z'/%3E%3Cpath d='M218 190 l14 118 M304 190 l0 118 M390 190 l-14 118' stroke-width='12'/%3E%3Ccircle cx='238' cy='382' r='24' fill='%23faf7f2' stroke='none'/%3E%3Ccircle cx='366' cy='382' r='24' fill='%23faf7f2' stroke='none'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg width='512' height='512' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CclipPath id='squircle'%3E%3Cpath d='M256 0C90 0 0 90 0 256s90 256 256 256 256-90 256-256S422 0 256 0z'/%3E%3C/clipPath%3E%3C/defs%3E%3Crect width='512' height='512' fill='%233f6b4f' clip-path='url(%23squircle)'/%3E%3Cg clip-path='url(%23squircle)' fill='none' stroke='%23faf7f2' stroke-width='20' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M120 130 h34 l22 210 h214'/%3E%3Cpath d='M176 190 h256 l-30 118 H206 z'/%3E%3Cpath d='M218 190 l14 118 M304 190 l0 118 M390 190 l-14 118' stroke-width='12'/%3E%3Ccircle cx='238' cy='382' r='24' fill='%23faf7f2' stroke='none'/%3E%3Ccircle cx='366' cy='382' r='24' fill='%23faf7f2' stroke='none'/%3E%3C/g%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#faf7f2; --surface:#ffffff; --ink:#2b2622; --ink-dim:#7a726690;
@@ -48,7 +51,6 @@ h1{font-size:28px; font-style:italic; color:var(--accent)}
   font-size:13px; padding:7px 14px; border-radius:999px; cursor:pointer; white-space:nowrap; flex:none;
 }
 .tab.active{background:var(--accent); color:var(--accent-ink)}
-
 .signin-banner{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   background:var(--chip); border-radius:12px; padding:10px 14px; margin:12px 0; font-size:13px;
@@ -60,7 +62,6 @@ h1{font-size:28px; font-style:italic; color:var(--accent)}
 .account{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-dim)}
 .account img{width:22px; height:22px; border-radius:50%}
 .account button{background:none; border:none; color:var(--ink-dim); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
-
 .addbar{display:flex; gap:8px; padding:14px 0; flex-wrap:wrap}
 .addbar input{
   flex:1; min-width:0; border:1px solid var(--line); background:var(--surface); color:var(--ink);
@@ -84,7 +85,6 @@ h1{font-size:28px; font-style:italic; color:var(--accent)}
   font:inherit; font-size:13px; padding:6px 8px; border-radius:8px; text-align:right;
 }
 .budgetbar .over{color:var(--danger)}
-
 main{flex:1; padding-bottom:24px; overflow-y:auto}
 .section{margin-top:18px}
 .section h2{
@@ -108,7 +108,6 @@ main{flex:1; padding-bottom:24px; overflow-y:auto}
 .item .src{font-size:11px; color:var(--ink-dim); font-weight:600; flex:none}
 .item .del{background:none; border:none; color:var(--ink-dim); font-size:18px; cursor:pointer; flex:none; padding:2px 4px}
 .empty{color:var(--ink-dim); font-size:14px; text-align:center; padding:40px 20px; line-height:1.6}
-
 .favgrid{display:flex; flex-wrap:wrap; gap:8px; padding:14px 0}
 .fav{
   border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px;
@@ -116,7 +115,6 @@ main{flex:1; padding-bottom:24px; overflow-y:auto}
 }
 .fav .dot{width:7px; height:7px; border-radius:50%; flex:none}
 .fav.added{opacity:.4}
-
 .recurring{padding:14px 0}
 .recrow{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:6px}
 .recrow .label{flex:1; font-size:15px}
@@ -124,7 +122,6 @@ main{flex:1; padding-bottom:24px; overflow-y:auto}
 .toggle.on{background:var(--accent)}
 .toggle .knob{position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--surface); transition:left .15s}
 .toggle.on .knob{left:20px}
-
 .recipebox{padding:14px 0}
 .recipebox textarea{
   width:100%; min-height:110px; border:1px solid var(--line); background:var(--surface); color:var(--ink);
@@ -144,7 +141,6 @@ main{flex:1; padding-bottom:24px; overflow-y:auto}
 .addfavrow input{flex:1; min-width:120px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px}
 .addfavrow select{border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px; padding:10px; border-radius:10px}
 footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 20px}
-
 /* Meal plan */
 .weekgrid{display:flex; flex-direction:column; gap:8px; padding:14px 0}
 .dayrow{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
@@ -152,17 +148,14 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
 .dayrow select{flex:1; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:8px 10px; border-radius:8px}
 .weekbar{display:flex; align-items:center; justify-content:space-between; padding-top:14px; gap:8px}
 .weekbar .wk{font-size:13px; color:var(--ink-dim); font-weight:600}
-
 .recipecard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:8px}
 .recipecard h3{font-size:16px; font-style:italic; color:var(--ink)}
 .recipecard .ing{font-size:12px; color:var(--ink-dim); margin-top:4px; line-height:1.5}
 .recipecard .row{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
 .recipecard .del{background:none;border:none;color:var(--ink-dim);font-size:16px;cursor:pointer;flex:none;padding:2px 4px}
-
 .newrecipe{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:14px}
 .newrecipe input{width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px; margin-bottom:8px}
 .newrecipe textarea{width:100%; min-height:90px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:13px; padding:10px 12px; border-radius:10px; resize:vertical; margin-bottom:8px}
-
 .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50}
 .modal{background:var(--surface); width:100%; max-width:560px; border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px)); max-height:80vh; overflow-y:auto}
 .modal h2{font-size:19px; font-style:italic; color:var(--accent); margin-bottom:4px}
@@ -172,7 +165,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
 .checkrow label{flex:1; font-size:15px}
 .modal-actions{display:flex; gap:8px; margin-top:16px}
 .modal-actions button{flex:1}
-
 .history{padding:14px 0}
 .histweek{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px}
 .histweek .wl{font-size:12px; color:var(--ink-dim); font-weight:700; margin-bottom:6px}
@@ -181,7 +173,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
 </style>
 </head>
 <body>
-
 <div class="app">
   <header>
     <div class="top">
@@ -197,7 +188,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     </div>
     <div id="signinBanner"></div>
   </header>
-
   <main>
     <div id="view-list">
       <div class="budgetbar">
@@ -212,7 +202,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       </div>
       <div id="listBody"></div>
     </div>
-
     <div id="view-favorites" hidden>
       <p class="hint" style="padding-top:14px">Tap to drop straight into your list.</p>
       <div class="favgrid" id="favGrid"></div>
@@ -231,13 +220,11 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
         <button class="primary-btn" id="addFavBtn">Save</button>
       </div>
     </div>
-
     <div id="view-recurring" hidden>
       <p class="hint" style="padding-top:14px">Staples you buy every week. Toggle on the ones you're low on — "Refill this week" adds them all at once.</p>
       <div class="recurring" id="recurringBody"></div>
       <button class="primary-btn" id="refillBtn" style="width:100%">Refill this week's staples</button>
     </div>
-
     <div id="view-meals" hidden>
       <div class="weekbar">
         <button class="secondary-btn" id="prevWeekBtn">← Prev</button>
@@ -246,13 +233,11 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       </div>
       <div class="weekgrid" id="weekGrid"></div>
       <button class="primary-btn" id="planReviewBtn" style="width:100%; margin-top:12px">Review ingredients for this week</button>
-
       <div class="section" style="margin-top:26px">
         <h2>Past weeks</h2>
         <div class="history" id="historyBody"></div>
       </div>
     </div>
-
     <div id="view-recipes" hidden>
       <p class="hint" style="padding-top:14px">Tap a recipe to see or edit its full details. These are what you assign to days in Meal Plan.</p>
       <input id="recipeSearch" class="editor-field" placeholder="Search recipes…" style="width:100%; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px; margin-bottom:12px" />
@@ -260,18 +245,14 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       <button class="primary-btn" id="newRecipeBtn" style="width:100%; margin-top:10px">+ New recipe</button>
     </div>
   </main>
-
   <footer id="footerNote">Saved to your Google Drive · no ads</footer>
 </div>
-
 <div id="modalRoot"></div>
-
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 (function(){
   "use strict";
-
   /* =========================================================
      CONFIG — replace with your own OAuth Client ID.
      See setup instructions provided alongside this file.
@@ -281,7 +262,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   // The Drive folder Basket's data file lives in. Leave "" to store at the root of My Drive.
   var DRIVE_FOLDER_ID = "1a3cnDNkFPcDbc7SLmBkI2-G_H00DhWtj";
   var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
-
   var CATS = [
     {id:"produce", label:"Produce", color:"var(--cat-produce)"},
     {id:"dairy", label:"Dairy & Eggs", color:"var(--cat-dairy)"},
@@ -293,7 +273,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     {id:"other", label:"Other", color:"var(--cat-other)"}
   ];
   var CATMAP = {}; CATS.forEach(function(c){ CATMAP[c.id] = c; });
-
   var RULES = [
     [/apple|banana|orange|lettuce|tomato|onion|potato|carrot|pepper|cucumber|avocado|lemon|lime|garlic|spinach|broccoli|grape|berry|mushroom|herb|basil|parsley|fruit|veg/i,"produce"],
     [/milk|cheese|yogh?urt|butter|cream|egg/i,"dairy"],
@@ -320,7 +299,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     });
   }
   var DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
   function isoWeekKey(d){
     var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     var day = (date.getUTCDay() + 6) % 7;
@@ -334,7 +312,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     var m = new Date(d); m.setDate(d.getDate()-day); m.setHours(0,0,0,0);
     return m;
   }
-
   var defaultState = {
     items: [],
     favorites: [
@@ -355,7 +332,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     weeks: {}, // weekKey -> { days: {Mon:recipeId,...}, reviewed: bool }
     budget: null
   };
-
   function cloneDefault(){ return JSON.parse(JSON.stringify(defaultState)); }
   function normalize(p){
     p = p || {};
@@ -372,11 +348,9 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       budget: (typeof p.budget === "number") ? p.budget : null
     };
   }
-
   var state = cloneDefault();
   var ready = false;
   var currentWeekStart = mondayOf(new Date());
-
   /* ---------------- Local cache (instant reopen; not the source of truth) ---------------- */
   function cacheRead(){
     try { var raw = localStorage.getItem("basket_cache_v2"); return raw ? normalize(JSON.parse(raw)) : null; }
@@ -385,16 +359,13 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   function cacheWrite(){
     try { localStorage.setItem("basket_cache_v2", JSON.stringify(state)); } catch(e){}
   }
-
   function setStatus(text){ var el = document.getElementById("syncStatus"); if (el) el.textContent = text; }
-
   /* ================= Google Sign-In + Drive persistence ================= */
   var tokenClient = null;
   var accessToken = null;
   var driveFileId = null;
   var saveTimer = null;
   var GAPI_READY = false;
-
   function loadScript(src){
     return new Promise(function(resolve, reject){
       var s = document.createElement("script");
@@ -402,7 +373,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       document.head.appendChild(s);
     });
   }
-
   function initGis(){
     if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -418,7 +388,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     });
     return true;
   }
-
   function renderSigninBanner(){
     var el = document.getElementById("signinBanner");
     if (accessToken){
@@ -433,7 +402,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       };
     }
   }
-
   function signOut(){
     if (accessToken && window.google && google.accounts && google.accounts.oauth2){
       google.accounts.oauth2.revoke(accessToken, function(){});
@@ -442,13 +410,11 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     try { sessionStorage.removeItem("basket_gtoken"); } catch(e){}
     renderSigninBanner();
   }
-
   function driveFetch(url, opts){
     opts = opts || {};
     opts.headers = Object.assign({Authorization: "Bearer " + accessToken}, opts.headers || {});
     return fetch(url, opts);
   }
-
   function findOrCreateFile(){
     var q = "name='" + DRIVE_FILE_NAME + "' and trashed=false";
     if (DRIVE_FOLDER_ID) q += " and '" + DRIVE_FOLDER_ID + "' in parents";
@@ -472,13 +438,11 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
         }).then(function(r){ return r.json(); }).then(function(f){ return f.id; });
       });
   }
-
   function driveRead(fileId){
     return driveFetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media")
       .then(function(r){ return r.ok ? r.json() : null; })
       .catch(function(){ return null; });
   }
-
   function driveWrite(fileId, data){
     return driveFetch("https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media", {
       method: "PATCH",
@@ -486,7 +450,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       body: JSON.stringify(data)
     });
   }
-
   function onSignedIn(){
     renderSigninBanner();
     setStatus("Connecting…");
@@ -509,7 +472,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       setStatus("Couldn't connect");
     });
   }
-
   function save(){
     cacheWrite();
     if (!ready) return;
@@ -528,13 +490,10 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       }).catch(function(){ setStatus("Couldn't save"); });
     }, 500);
   }
-
   /* ---------------- App logic (list, favorites, recurring, recipes, meal plan) ---------------- */
-
   function renderAll(){
     renderList(); renderBudget(); renderFavorites(); renderRecurring(); renderWeek(); renderRecipeLib(); renderHistory();
   }
-
   function addItem(name, cat, src, qty, price){
     name = (name||"").trim();
     if (!name) return;
@@ -544,16 +503,13 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     state.items.push({id:uid(), name:name, cat:cat, done:false, src: src || null, qty:qty, price:price});
     save();
   }
-
   function money(n){
     return "R" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
-
   function renderCount(){
     var open = state.items.filter(function(i){return !i.done;}).length;
     document.getElementById("count").textContent = open === 0 ? "" : (open + (open===1?" item":" items"));
   }
-
   function renderBudget(){
     var totalEl = document.getElementById("basketTotal");
     var total = state.items.reduce(function(sum, it){
@@ -561,7 +517,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     }, 0);
     totalEl.textContent = money(total);
     totalEl.classList.toggle("over", state.budget != null && total > state.budget);
-
     var budgetInput = document.getElementById("budgetInput");
     if (document.activeElement !== budgetInput){
       budgetInput.value = state.budget != null ? state.budget : "";
@@ -575,7 +530,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     budgetSaveTimer = setTimeout(function(){ save(); }, 500);
     renderBudget();
   });
-
   function renderList(){
     renderCount();
     var body = document.getElementById("listBody");
@@ -606,7 +560,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     });
     body.innerHTML = html;
   }
-
   document.getElementById("listBody").addEventListener("click", function(e){
     var btn = e.target.closest("button"); if (!btn) return;
     var row = btn.closest(".item"); var id = row.getAttribute("data-id");
@@ -618,7 +571,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       save();
     }
   });
-
   document.getElementById("addBtn").addEventListener("click", function(){
     var inp = document.getElementById("newItem");
     var qtyInp = document.getElementById("newQty");
@@ -631,7 +583,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   document.getElementById("newItem").addEventListener("keydown", function(e){
     if (e.key === "Enter"){ e.preventDefault(); document.getElementById("addBtn").click(); }
   });
-
   function renderFavorites(){
     var grid = document.getElementById("favGrid");
     grid.innerHTML = state.favorites.map(function(f,idx){
@@ -651,7 +602,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     state.favorites.push({name:name, cat:cat});
     save(); nameInp.value = "";
   });
-
   function renderRecurring(){
     var body = document.getElementById("recurringBody");
     body.innerHTML = state.recurring.map(function(r,idx){
@@ -672,10 +622,8 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     state.recurring.filter(function(r){return r.on;}).forEach(function(r){ addItem(r.name, r.cat, "Weekly"); });
     switchTab("list");
   });
-
   /* ---------------- Recipes ---------------- */
   var recipeSearchTerm = "";
-
   function renderRecipeLib(){
     var el = document.getElementById("recipeLib");
     var term = recipeSearchTerm.trim().toLowerCase();
@@ -721,11 +669,9 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     }
     openRecipeEditor(id);
   });
-
   document.getElementById("newRecipeBtn").addEventListener("click", function(){
     openRecipeEditor(null);
   });
-
   function openRecipeEditor(id){
     var existing = id ? state.recipes.find(function(r){return r.id===id;}) : null;
     var root = document.getElementById("modalRoot");
@@ -741,7 +687,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       '<button class="secondary-btn" id="reCancel">Cancel</button>' +
       '<button class="primary-btn" id="reSave">Save recipe</button>' +
       '</div></div></div>';
-
     document.getElementById("reCancel").onclick = function(){ root.innerHTML = ""; };
     document.getElementById("recipeOverlay").addEventListener("click", function(e){
       if (e.target.id === "recipeOverlay") root.innerHTML = "";
@@ -761,19 +706,16 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       root.innerHTML = "";
     };
   }
-
   function weekData(key){
     if (!state.weeks[key]) state.weeks[key] = {days:{}, reviewed:false};
     return state.weeks[key];
   }
-
   function renderWeek(){
     var key = isoWeekKey(currentWeekStart);
     var wd = weekData(key);
     var label = currentWeekStart.toLocaleDateString(undefined, {month:"short", day:"numeric"});
     var end = new Date(currentWeekStart); end.setDate(end.getDate()+6);
     document.getElementById("weekLabel").textContent = "Week of " + label + " – " + end.toLocaleDateString(undefined,{month:"short",day:"numeric"});
-
     var grid = document.getElementById("weekGrid");
     grid.innerHTML = DAYS.map(function(d){
       var sel = '<select data-day="'+d+'"><option value="">— no meal —</option>' +
@@ -797,7 +739,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   document.getElementById("nextWeekBtn").addEventListener("click", function(){
     currentWeekStart.setDate(currentWeekStart.getDate()+7); renderWeek();
   });
-
   function renderHistory(){
     var el = document.getElementById("historyBody");
     var keys = Object.keys(state.weeks).sort().reverse().filter(function(k){ return k !== isoWeekKey(currentWeekStart); });
@@ -820,7 +761,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     save(); renderWeek();
     switchTab("meals");
   });
-
   /* ---- Ingredient review modal ---- */
   document.getElementById("planReviewBtn").addEventListener("click", function(){
     var key = isoWeekKey(currentWeekStart);
@@ -843,7 +783,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     }
     openReviewModal(list, wd);
   });
-
   function openReviewModal(list, wd){
     var root = document.getElementById("modalRoot");
     var rows = list.map(function(item, idx){
@@ -860,7 +799,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       '<button class="secondary-btn" id="reviewCancel">Cancel</button>' +
       '<button class="primary-btn" id="reviewConfirm">Add to list</button>' +
       '</div></div></div>';
-
     document.getElementById("reviewCancel").onclick = function(){ root.innerHTML = ""; };
     document.getElementById("reviewOverlay").addEventListener("click", function(e){
       if (e.target.id === "reviewOverlay") root.innerHTML = "";
@@ -876,7 +814,6 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       switchTab("list");
     };
   }
-
   /* ---------------- Tabs ---------------- */
   function switchTab(name){
     document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("active", t.dataset.tab === name); });
@@ -887,14 +824,11 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   document.querySelectorAll(".tab").forEach(function(t){
     t.addEventListener("click", function(){ switchTab(t.dataset.tab); });
   });
-
   /* ---------------- Boot ---------------- */
   function boot(){
     var cached = cacheRead();
     if (cached){ state = cached; ready = true; renderAll(); } else { renderAll(); }
-
     renderSigninBanner();
-
     var gisPoll = setInterval(function(){
       if (initGis()){
         clearInterval(gisPoll);
