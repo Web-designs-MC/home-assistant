@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Home Improvements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --paper: #EEEBE2;
+    --paper-raised: #F7F5EF;
+    --ink: #22262B;
+    --ink-soft: #565D63;
+    --line: #D8D3C4;
+    --teal: #2F6B5E;
+    --teal-deep: #1E4740;
+    --brass: #B4823C;
+    --brass-soft: #EFE1C4;
+    --brick: #A34A34;
+    --white: #FFFFFF;
+    --radius-card: 3px;
+    --radius-pill: 999px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1B1E22;
+      --paper-raised: #23272C;
+      --ink: #EDEAE2;
+      --ink-soft: #A8AEB4;
+      --line: #383D42;
+      --teal: #6FB3A0;
+      --teal-deep: #4C8F7E;
+      --brass: #D9AE68;
+      --brass-soft: #33301F;
+      --brick: #D08267;
+      --white: #23272C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1B1E22;
+    --paper-raised: #23272C;
+    --ink: #EDEAE2;
+    --ink-soft: #A8AEB4;
+    --line: #383D42;
+    --teal: #6FB3A0;
+    --teal-deep: #4C8F7E;
+    --brass: #D9AE68;
+    --brass-soft: #33301F;
+    --brick: #D08267;
+    --white: #23272C;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: 'Zilla Slab', Georgia, serif; }
+
+  ::selection { background: var(--brass-soft); }
+
+  .app { display: flex; min-height: 100%; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background: var(--paper-raised);
+    border-right: 1px solid var(--line);
+    padding: 28px 18px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .brand {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 2px;
+  }
+  .brand-sub {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin: 0 0 26px;
+    line-height: 1.4;
+  }
+  .room-list { list-style: none; margin: 0; padding: 0; }
+  .room-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin-bottom: 2px;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .room-item:hover { background: var(--brass-soft); color: var(--ink); }
+  .room-item.active {
+    background: var(--teal);
+    color: #fff;
+  }
+  .room-item .count {
+    font-size: 11.5px;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar-total {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .sidebar-total .label {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .sidebar-total .num {
+    font-family: 'Zilla Slab', serif;
+    font-size: 28px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar-total .num small { font-size: 14px; color: var(--ink-soft); font-weight: 500; }
+
+  /* ---------- Main ---------- */
+  .main { flex: 1; min-width: 0; padding: 34px 40px 80px; max-width: 1180px; }
+  .main-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 26px;
+    flex-wrap: wrap;
+  }
+  .main-header h1 { font-size: 30px; margin: 0 0 4px; font-weight: 600; }
+  .main-header .sub { color: var(--ink-soft); font-size: 14px; margin: 0; }
+  .btn {
+    appearance: none;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-pill);
+    padding: 10px 20px;
+    transition: transform 0.08s ease, opacity 0.12s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-primary:hover { background: var(--teal-deep); }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--ink-soft); }
+  .btn-danger { background: transparent; color: var(--brick); }
+
+  .offline-banner {
+    display: none;
+    background: var(--brass-soft);
+    color: var(--ink);
+    border: 1px solid var(--brass);
+    border-radius: var(--radius-card);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .offline-banner.show { display: block; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 18px;
+  }
+
+  .empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-card);
+  }
+  .empty h3 { color: var(--ink); margin-bottom: 6px; }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.12s ease;
+  }
+  .card:hover { border-color: var(--teal); }
+  .card-photo {
+    height: 140px;
+    background: var(--line) center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .card-body { padding: 14px 15px 16px; }
+  .card-room {
+    font-size: 11px;
+    color: var(--teal);
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .card-name { font-size: 16.5px; font-weight: 600; margin: 0 0 10px; font-family: 'Zilla Slab', serif; }
+  .bar-track {
+    height: 6px;
+    background: var(--line);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .bar-fill { height: 100%; background: var(--teal); }
+  .bar-fill.over { background: var(--brick); }
+  .card-nums {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Detail view ---------- */
+  .detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    cursor: pointer;
+    margin-bottom: 18px;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .detail-back:hover { color: var(--ink); }
+  .detail-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  .detail-top .tag { font-size: 12px; color: var(--teal); font-weight: 600; margin-bottom: 4px; }
+  .detail-top h1 { margin: 0; font-size: 28px; }
+
+  .budget-panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+    min-width: 220px;
+  }
+  .budget-panel .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--ink-soft);}
+  .budget-panel .row.total { color: var(--ink); font-weight: 600; margin-top: 6px; }
+  .budget-panel .bar-track { height: 8px; margin: 10px 0 8px; }
+  .budget-input { width: 90px; text-align: right; border: none; background: transparent; font: inherit; color: var(--ink); font-weight: 600; border-bottom: 1px solid transparent; }
+  .budget-input:focus { outline: none; border-bottom: 1px solid var(--teal); }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin: 34px 0 12px;
+  }
+
+  .photo-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .photo-tile {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--line);
+  }
+  .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-tile .rm {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer; border: none;
+    opacity: 0; transition: opacity 0.12s ease;
+  }
+  .photo-tile:hover .rm { opacity: 1; }
+  .photo-add {
+    aspect-ratio: 1;
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius-card);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 12px;
+    background: none;
+    font-family: inherit;
+  }
+  .photo-add:hover { border-color: var(--teal); color: var(--teal); }
+  .photo-add .plus { font-size: 22px; line-height: 1; }
+
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th {
+    text-align: left;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .items-table th.num, .items-table td.num { text-align: right; }
+  .items-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .items-table tr.bought td { color: var(--ink-soft); text-decoration: line-through; }
+  .items-table input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--teal); }
+  .items-table .del { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 15px; }
+  .items-table .del:hover { color: var(--brick); }
+  .item-name-cell { display: flex; align-items: center; gap: 10px; }
+
+  .add-item-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .add-item-row input {
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 9px 11px;
+    background: var(--paper-raised);
+    color: var(--ink);
+  }
+  .add-item-row input[name=iname] { flex: 1; min-width: 160px; }
+  .add-item-row input[name=icost] { width: 100px; }
+
+  textarea.notes {
+    width: 100%;
+    min-height: 80px;
+    font: inherit;
+    font-size: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--paper-raised);
+    color: var(--ink);
+    padding: 12px;
+    resize: vertical;
+  }
+  textarea.notes:focus, .budget-panel input:focus { outline: none; }
+
+  /* ---------- Modal ---------- */
+  .modal-veil {
+    position: fixed; inset: 0;
+    background: rgba(20, 22, 20, 0.4);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-veil.show { display: flex; }
+  .modal {
+    background: var(--paper-raised);
+    border-radius: 6px;
+    padding: 26px;
+    width: 380px;
+    max-width: 100%;
+    border: 1px solid var(--line);
+  }
+  .modal h2 { margin: 0 0 18px; font-size: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%; font: inherit; font-size: 14.5px;
+    border: 1px solid var(--line); border-radius: var(--radius-card);
+    padding: 10px 11px; background: var(--paper); color: var(--ink);
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--teal); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  .sync-status {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .sync-status::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+  .sync-status.pending::before { background: var(--brass); }
+  .sync-status.offline::before { background: var(--brick); }
+
+  @media (max-width: 760px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); }
+    .room-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .room-item { flex: 0 0 auto; }
+    .sidebar-total { display: none; }
+    .main { padding: 24px 18px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <p class="brand">Home Improvements</p>
+    <p class="brand-sub">Every room, every idea, one running total.</p>
+    <ul class="room-list" id="roomList"></ul>
+    <div class="sidebar-total">
+      <div class="label">Total across all projects</div>
+      <div class="num" id="grandTotal">R0<small>&nbsp;spent</small></div>
+    </div>
+    <div class="sync-status" id="syncStatus">not signed in</div>
+    <button class="btn btn-ghost" id="signInBtn" style="margin-top:10px; width:100%;">Sign in with Google</button>
+  </aside>
+
+  <main class="main">
+    <div id="offlineBanner" class="offline-banner"></div>
+
+    <!-- view: list (tab-style, shown/hidden rather than routed) -->
+    <div id="view-list">
+      <div class="main-header">
+        <div>
+          <h1 id="roomHeading">All rooms</h1>
+          <p class="sub" id="roomSub">Every project, ideas and budget in one place.</p>
+        </div>
+        <button class="btn btn-primary" id="newProjectBtn">+ New project</button>
+      </div>
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <!-- view: detail -->
+    <div id="view-detail" hidden></div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* =====================================================================
+   ARCHITECTURE
+   One JSON object (`state`) is the entire database, kept as ONE file
+   in the signed-in user's Google Drive ("home-improvements-state.json")
+   — read whole on load, written whole (in place, via files.update) on
+   every change. No localStorage for app data; photos are resized
+   client-side and embedded as base64 inside the same JSON object, so
+   one Drive file really is the whole app.
+
+   Auth: Google Identity Services token-client flow. The access token
+   lives in memory + a sessionStorage copy (so a refresh doesn't force
+   re-login, but nothing survives closing the tab) — same as Basket
+   and Book. Talks to the Drive REST API directly with fetch.
+
+   save() does three things in order:
+     1. re-render whatever's on screen (optimistic)
+     2. mark the sync badge "saving…"
+     3. push the whole state object to Drive, debounced so a burst of
+        edits (typing, ticking boxes) fires one write, not one per key
+
+   No per-item listeners: each container gets ONE delegated listener
+   and inspects event.target to find which row/button was actually hit.
+   Views are plain divs toggled with `hidden` — no router.
+   ===================================================================== */
+
+const ROOMS = ["Kitchen","Bathroom","Living Room","Bedroom","Garden & Outdoor","Garage","Other"];
+const DRIVE_FILE_NAME = "home-improvements-state.json";
+const SAVE_DEBOUNCE_MS = 900;
+const PHOTO_MAX_DIM = 900;
+const PHOTO_QUALITY = 0.72;
+
+const GOOGLE_CLIENT_ID = "620861725781-a91hevfjrc8cgp3qmt5af36a9i7pt9jj.apps.googleusercontent.com";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const TOKEN_SESSION_KEY = "home-improvements-drive-token";
+
+const fmtCurrency = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 2 });
+
+let state = { projects: [] };
+let view = { screen: "list", room: "All", projectId: null }; // transient UI state — never persisted
+
+let accessToken = null;
+let tokenClient = null;
+let driveFileId = null;
+let driveStatus = "signed_out"; // signed_out | loading | ok | error
+let saveTimer = null;
+let saveInFlight = false;
+let saveQueued = false;
+
+const el = (id) => document.getElementById(id);
+const fmt = (n) => fmtCurrency.format(Math.round((Number(n) || 0) * 100) / 100);
+const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function itemsTotal(p) { return (p.items || []).reduce((s, it) => s + (Number(it.cost) || 0), 0); }
+function itemsSpent(p) { return (p.items || []).filter(it => it.bought).reduce((s, it) => s + (Number(it.cost) || 0), 0); }
+function assetUrl(dataUrl) { return dataUrl; } // photos live as data: URLs inside state itself
+
+/* ---------------------------------------------------------------------
+   Boot: paint immediately, wire up the sign-in button, and try to
+   resume a session from sessionStorage's cached token (no app-data
+   caching — only the auth token, exactly like Basket/Book).
+   --------------------------------------------------------------------- */
+function boot() {
+  renderAll();
+  el('signInBtn').addEventListener('click', signIn);
+
+  const cached = sessionStorage.getItem(TOKEN_SESSION_KEY);
+  if (cached) {
+    try {
+      const { token, expiresAt } = JSON.parse(cached);
+      if (token && expiresAt > Date.now()) {
+        accessToken = token;
+        onSignedIn();
+        return;
+      }
+    } catch (e) {}
+  }
+  setSyncStatus('signed_out');
+}
+
+window.addEventListener('load', () => {
+  if (!window.google || !google.accounts || !google.accounts.oauth2) {
+    // GIS script blocked or failed to load
+    setSyncStatus('error');
+    updateOfflineBanner('error');
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: (resp) => {
+      if (resp.error) { setSyncStatus('error'); updateOfflineBanner('error'); return; }
+      accessToken = resp.access_token;
+      const expiresAt = Date.now() + (Number(resp.expires_in) || 3600) * 1000 - 60000;
+      try { sessionStorage.setItem(TOKEN_SESSION_KEY, JSON.stringify({ token: accessToken, expiresAt })); } catch (e) {}
+      onSignedIn();
+    }
+  });
+  boot();
+});
+
+function signIn() {
+  if (!tokenClient) return;
+  tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'consent' });
+}
+
+async function onSignedIn() {
+  el('signInBtn').textContent = 'Switch Google account';
+  await loadFromDrive();
+}
+
+/* ---------------------------------------------------------------------
+   Drive REST helpers
+   --------------------------------------------------------------------- */
+function authHeaders(extra) {
+  return Object.assign({ Authorization: 'Bearer ' + accessToken }, extra || {});
+}
+async function driveFetch(url, opts) {
+  const res = await fetch(url, opts);
+  if (res.status === 401) { accessToken = null; sessionStorage.removeItem(TOKEN_SESSION_KEY); throw { code: 'needs_reauth' }; }
+  if (!res.ok) throw { code: 'error', status: res.status, body: await res.text().catch(() => '') };
+  return res;
+}
+
+async function loadFromDrive() {
+  setSyncStatus('loading');
+  try {
+    const q = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);
+    const listRes = await driveFetch(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`,
+      { headers: authHeaders() }
+    );
+    const listJson = await listRes.json();
+    const files = listJson.files || [];
+
+    if (files.length) {
+      driveFileId = files[0].id;
+      const contentRes = await driveFetch(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+        { headers: authHeaders() }
+      );
+      const text = await contentRes.text();
+      const parsed = JSON.parse(text);
+      if (parsed && Array.isArray(parsed.projects)) state = parsed;
+    } else {
+      driveFileId = null; // will be created on first save
+    }
+    driveStatus = 'ok';
+    setSyncStatus('saved');
+  } catch (e) {
+    driveStatus = e && e.code === 'needs_reauth' ? 'needs_reauth' : 'error';
+    setSyncStatus(driveStatus);
+  }
+  updateOfflineBanner(driveStatus);
+  renderAll();
+}
+
+/* ---------------------------------------------------------------------
+   save(): re-render + debounced whole-object write straight back to
+   the same Drive file (files.update, uploadType=media — true in-place
+   content overwrite; files.create only the first time).
+   --------------------------------------------------------------------- */
+function save() {
+  renderAll();
+  if (!accessToken) { setSyncStatus('signed_out'); return; }
+  setSyncStatus('pending');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
+}
+
+async function flushSave() {
+  if (saveInFlight) { saveQueued = true; return; }
+  saveInFlight = true;
+  try {
+    const json = JSON.stringify(state);
+
+    if (driveFileId) {
+      await driveFetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
+        { method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: json }
+      );
+    } else {
+      const boundary = 'reno-' + uid('');
+      const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+      const body =
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n` +
+        `--${boundary}--`;
+      const createRes = await driveFetch(
+        `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`,
+        { method: 'POST', headers: authHeaders({ 'Content-Type': `multipart/related; boundary=${boundary}` }), body }
+      );
+      const createJson = await createRes.json();
+      driveFileId = createJson.id;
+    }
+    driveStatus = 'ok';
+    setSyncStatus('saved');
+    updateOfflineBanner('ok');
+  } catch (e) {
+    driveStatus = e && e.code === 'needs_reauth' ? 'needs_reauth' : 'error';
+    setSyncStatus(driveStatus);
+    updateOfflineBanner(driveStatus);
+  } finally {
+    saveInFlight = false;
+    if (saveQueued) { saveQueued = false; flushSave(); }
+  }
+}
+
+function setSyncStatus(s) {
+  const badge = el('syncStatus');
+  badge.className = 'sync-status ' + (s === 'saved' ? '' : s === 'pending' || s === 'loading' ? 'pending' : 'offline');
+  badge.textContent = {
+    signed_out: 'not signed in',
+    saved: 'saved to Drive',
+    pending: 'saving to Drive…',
+    loading: 'loading from Drive…',
+    needs_reauth: 'sign-in expired',
+    error: 'not saving — Drive error'
+  }[s] || s;
+}
+function updateOfflineBanner(s) {
+  const banner = el('offlineBanner');
+  const copy = {
+    error: "Couldn't reach Google Drive just now. Your changes will keep working in this tab, but won't be saved until that's resolved.",
+    needs_reauth: "Your Google sign-in has expired — click \u201cSign in with Google\u201d again to keep saving.",
+    signed_out: "Sign in with Google (top left) so your projects save to Drive."
+  }[s] || '';
+  banner.textContent = copy;
+  banner.classList.toggle('show', !!copy);
+}
+
+/* ---------------------------------------------------------------------
+   renderAll(): the one dispatcher. Each screen has its own render
+   function that rebuilds its slice of the DOM wholesale from `state`.
+   --------------------------------------------------------------------- */
+function renderAll() {
+  renderRoomList();
+  renderGrandTotal();
+  el('view-list').hidden = view.screen !== 'list';
+  el('view-detail').hidden = view.screen !== 'detail';
+  if (view.screen === 'list') renderList();
+  else if (view.screen === 'detail') renderDetail();
+}
+
+function renderGrandTotal() {
+  const grand = state.projects.reduce((s, p) => s + itemsSpent(p), 0);
+  el('grandTotal').innerHTML = fmt(grand) + '<small>&nbsp;spent</small>';
+}
+
+function renderRoomList() {
+  const counts = {};
+  ROOMS.forEach(r => counts[r] = 0);
+  state.projects.forEach(p => { counts[p.room] = (counts[p.room] || 0) + 1; });
+  const rows = [`<li class="room-item ${view.room==='All'?'active':''}" data-room="All"><span>All rooms</span><span class="count">${state.projects.length}</span></li>`]
+    .concat(ROOMS.map(r => `<li class="room-item ${view.room===r?'active':''}" data-room="${r}"><span>${r}</span><span class="count">${counts[r]||0}</span></li>`));
+  el('roomList').innerHTML = rows.join('');
+}
+
+function renderList() {
+  el('roomHeading').textContent = view.room === 'All' ? 'All rooms' : view.room;
+  const shown = view.room === 'All' ? state.projects : state.projects.filter(p => p.room === view.room);
+  el('roomSub').textContent = shown.length ? shown.length + (shown.length === 1 ? ' project' : ' projects') : 'Nothing here yet.';
+
+  if (!shown.length) {
+    el('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><h3>No projects yet</h3><p>Start a project for this room and build out its idea board and budget.</p></div>`;
+    return;
+  }
+  el('grid').innerHTML = shown.map(p => {
+    const total = itemsTotal(p), spent = itemsSpent(p), budget = Number(p.budget) || 0;
+    const cap = budget > 0 ? budget : (total || 1);
+    const pct = Math.min(100, Math.round((spent / cap) * 100));
+    const over = budget > 0 && spent > budget;
+    const cover = (p.photoIds && p.photoIds.length) ? p.photoIds[0] : null;
+    return `
+      <div class="card" data-id="${p.id}">
+        <div class="card-photo" style="${cover ? `background-image:url('${assetUrl(cover)}')` : ''}">${cover ? '' : 'No photos yet'}</div>
+        <div class="card-body">
+          <div class="card-room">${p.room}</div>
+          <h3 class="card-name">${escapeHtml(p.name)}</h3>
+          <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+          <div class="card-nums">
+            <span>${fmt(spent)} spent</span>
+            <span>${budget > 0 ? 'of ' + fmt(budget) : fmt(total) + ' total'}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderDetail() {
+  const p = state.projects.find(x => x.id === view.projectId);
+  if (!p) { view.screen = 'list'; view.projectId = null; renderAll(); return; }
+
+  const total = itemsTotal(p), spent = itemsSpent(p), budget = Number(p.budget) || 0;
+  const cap = budget > 0 ? budget : (total || 1);
+  const pct = Math.min(100, Math.round((spent / cap) * 100));
+  const over = budget > 0 && spent > budget;
+  const remaining = budget - spent;
+
+  const photos = (p.photoIds || []).map(id => `
+    <div class="photo-tile" data-pid="${id}">
+      <img src="${assetUrl(id)}" alt="">
+      <button class="rm" data-action="remove-photo" data-pid="${id}" title="Remove">✕</button>
+    </div>`).join('');
+
+  const itemRows = (p.items || []).map(it => `
+    <tr class="${it.bought ? 'bought' : ''}" data-item="${it.id}">
+      <td><input type="checkbox" ${it.bought ? 'checked' : ''} data-action="toggle-item" data-iid="${it.id}"></td>
+      <td class="item-name-cell">${escapeHtml(it.name)}</td>
+      <td class="num">${fmt(Number(it.cost) || 0)}</td>
+      <td><button class="del" data-action="delete-item" data-iid="${it.id}">✕</button></td>
+    </tr>`).join('');
+
+  el('view-detail').innerHTML = `
+    <button class="detail-back" data-action="back">← Back to ${p.room}</button>
+    <div class="detail-top">
+      <div>
+        <div class="tag">${p.room}</div>
+        <h1>${escapeHtml(p.name)}</h1>
+      </div>
+      <div class="budget-panel">
+        <div class="row"><span>Budget</span><span>${CURRENCY}<input class="budget-input" id="budgetInput" type="number" min="0" step="1" value="${budget || ''}" placeholder="not set"></span></div>
+        <div class="row"><span>Spent</span><span>${fmt(spent)}</span></div>
+        <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+        <div class="row total"><span>${budget > 0 ? (over ? 'Over by' : 'Remaining') : 'Item list total'}</span><span>${budget > 0 ? fmt(Math.abs(remaining)) : fmt(total)}</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Idea board</div>
+    <div class="photo-board" id="photoBoard">
+      ${photos}
+      <button class="photo-add" data-action="add-photo"><span class="plus">+</span>Add photo</button>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+    </div>
+
+    <div class="section-title">Items &amp; costs</div>
+    <table class="items-table" id="itemsTable">
+      <thead><tr><th style="width:34px"></th><th>Item</th><th class="num">Cost</th><th style="width:30px"></th></tr></thead>
+      <tbody>${itemRows || `<tr><td colspan="4" style="color:var(--ink-soft);padding:16px 10px;">No items yet — add materials, fixtures or labour below.</td></tr>`}</tbody>
+    </table>
+    <div class="add-item-row">
+      <input type="text" id="iname" placeholder="Item name">
+      <input type="number" id="icost" placeholder="Cost" min="0" step="0.01">
+      <button class="btn btn-primary" data-action="add-item">Add</button>
+    </div>
+
+    <div class="section-title">Notes</div>
+    <textarea class="notes" id="notesArea" placeholder="Measurements, contractor quotes, paint codes, anything worth remembering...">${escapeHtml(p.notes || '')}</textarea>
+
+    <div style="margin-top:30px;">
+      <button class="btn btn-danger" data-action="delete-project">Delete this project</button>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   Event wiring — one delegated listener per container, dispatching on
+   event.target / data-action, rather than a listener per element.
+   --------------------------------------------------------------------- */
+
+el('roomList').addEventListener('click', (e) => {
+  const li = e.target.closest('.room-item');
+  if (!li) return;
+  view.room = li.dataset.room;
+  view.screen = 'list';
+  view.projectId = null;
+  renderAll();
+});
+
+el('grid').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  view.projectId = card.dataset.id;
+  view.screen = 'detail';
+  renderAll();
+});
+
+el('newProjectBtn').addEventListener('click', () => openNewProjectModal());
+
+// Single delegated listener on the whole detail view — reads
+// data-action off whatever was actually clicked/changed.
+el('view-detail').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-action]');
+  if (!t) return;
+  const action = t.dataset.action;
+  const p = state.projects.find(x => x.id === view.projectId);
+
+  if (action === 'back') { view.screen = 'list'; view.projectId = null; renderAll(); }
+  else if (action === 'add-photo') { el('photoInput').click(); }
+  else if (action === 'remove-photo') {
+    p.photoIds = (p.photoIds || []).filter(x => x !== t.dataset.pid);
+    save();
+  }
+  else if (action === 'add-item') { addItem(p); }
+  else if (action === 'delete-item') {
+    p.items = p.items.filter(x => x.id !== t.dataset.iid);
+    save();
+  }
+  else if (action === 'delete-project') {
+    if (!confirm('Delete "' + p.name + '"? This can\'t be undone.')) return;
+    state.projects = state.projects.filter(x => x.id !== p.id);
+    view.screen = 'list'; view.projectId = null;
+    save();
+  }
+});
+
+el('view-detail').addEventListener('change', async (e) => {
+  const p = state.projects.find(x => x.id === view.projectId);
+  if (!p) return;
+
+  if (e.target.id === 'budgetInput') {
+    p.budget = e.target.value === '' ? 0 : Number(e.target.value);
+    save();
+  } else if (e.target.dataset.action === 'toggle-item') {
+    const it = p.items.find(x => x.id === e.target.dataset.iid);
+    if (it) it.bought = e.target.checked;
+    save();
+  } else if (e.target.id === 'photoInput') {
+    const files = Array.from(e.target.files || []);
+    for (const file of files) {
+      try {
+        const resized = await resizeImageFile(file);
+        p.photoIds = (p.photoIds || []).concat([resized]);
+      } catch (err) { console.warn('photo processing failed', err); }
+    }
+    save();
+  }
+});
+
+// Debounced autosave on notes / new-item inputs, without saving on every keystroke.
+let notesTimer = null;
+el('view-detail').addEventListener('input', (e) => {
+  if (e.target.id !== 'notesArea') return;
+  const p = state.projects.find(x => x.id === view.projectId);
+  if (!p) return;
+  p.notes = e.target.value;
+  clearTimeout(notesTimer);
+  notesTimer = setTimeout(save, 500);
+});
+el('view-detail').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.target.id === 'iname' || e.target.id === 'icost')) {
+    addItem(state.projects.find(x => x.id === view.projectId));
+  }
+});
+
+function addItem(p) {
+  const name = el('iname').value.trim();
+  const cost = Number(el('icost').value) || 0;
+  if (!name) return;
+  p.items = (p.items || []).concat([{ id: uid('i'), name, cost, bought: false }]);
+  el('iname').value = ''; el('icost').value = '';
+  save();
+}
+
+// Downscale + compress a photo before it's embedded in the JSON state,
+// so the one Drive file stays a reasonable size as the idea board grows.
+function resizeImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > PHOTO_MAX_DIM || height > PHOTO_MAX_DIM) {
+          const scale = PHOTO_MAX_DIM / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', PHOTO_QUALITY));
+      };
+      img.onerror = reject;
+      img.src = r.result;
+    };
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------------------------------------------------------------------
+   New-project modal — injected into a shared #modalRoot on demand,
+   removed by clearing that div, same pattern as the recipe/ingredient
+   modals in Basket and Book.
+   --------------------------------------------------------------------- */
+function openNewProjectModal() {
+  const defaultRoom = view.room !== 'All' ? view.room : ROOMS[0];
+  el('modalRoot').innerHTML = `
+    <div class="modal-veil show" id="modalVeil">
+      <div class="modal">
+        <h2>New project</h2>
+        <div class="field">
+          <label>Project name</label>
+          <input type="text" id="npName" placeholder="e.g. Retile the shower">
+        </div>
+        <div class="field">
+          <label>Room</label>
+          <select id="npRoom">${ROOMS.map(r => `<option value="${r}" ${r===defaultRoom?'selected':''}>${r}</option>`).join('')}</select>
+        </div>
+        <div class="field">
+          <label>Budget (optional)</label>
+          <input type="number" id="npBudget" placeholder="0" min="0" step="1">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-action="cancel">Cancel</button>
+          <button class="btn btn-primary" data-action="create">Create project</button>
+        </div>
+      </div>
+    </div>`;
+
+  el('modalRoot').addEventListener('click', modalClickHandler);
+  setTimeout(() => el('npName')?.focus(), 50);
+}
+function closeModal() {
+  el('modalRoot').removeEventListener('click', modalClickHandler);
+  el('modalRoot').innerHTML = '';
+}
+function modalClickHandler(e) {
+  if (e.target.id === 'modalVeil') { closeModal(); return; }
+  const action = e.target.dataset.action;
+  if (action === 'cancel') { closeModal(); return; }
+  if (action === 'create') {
+    const name = el('npName').value.trim();
+    if (!name) { el('npName').focus(); return; }
+    const room = el('npRoom').value;
+    const budget = Number(el('npBudget').value) || 0;
+    const p = { id: uid('p'), name, room, budget, items: [], photoIds: [], notes: '' };
+    state.projects.push(p);
+    closeModal();
+    view.room = room; view.screen = 'detail'; view.projectId = p.id;
+    save();
+  }
+}
+</script>
+</body>
+</html>
