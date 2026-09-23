@@ -172,7 +172,9 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
 .checkrow label{flex:1; font-size:15px; min-width:0; overflow-wrap:anywhere}
 .checkrow .ckprice{width:90px; flex:none; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:14px; padding:8px 10px; border-radius:8px; text-align:right}
 .checkrow.off label{color:var(--ink-dim); text-decoration:line-through}
-.checkrow.off .ckprice{opacity:.4}
+.checkrow .ckqty{width:52px; flex:none; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-size:14px; padding:8px 6px; border-radius:8px; text-align:center}
+.checkrow .x{font-size:12px; color:var(--ink-dim); flex:none}
+.checkrow.off .ckprice, .checkrow.off .ckqty{opacity:.4}
 .reviewtotal{display:flex; justify-content:space-between; font-size:14px; font-weight:700; padding-top:12px; font-variant-numeric:tabular-nums}
 .modal-actions{display:flex; gap:8px; margin-top:16px}
 .modal-actions button{flex:1}
@@ -917,16 +919,17 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   function openReviewModal(list, wd){
     var root = document.getElementById("modalRoot");
     var rows = list.map(function(item, idx){
-      var lbl = item.name + (item.count > 1 ? " (×" + item.count + ")" : "");
       var p = knownPrice(item.name);
       return '<div class="checkrow" id="row'+idx+'"><input type="checkbox" id="ck'+idx+'" checked>' +
-        '<label for="ck'+idx+'">'+escapeHtml(lbl)+'</label>' +
-        '<input class="ckprice" id="pr'+idx+'" inputmode="decimal" placeholder="R price" value="'+(p != null ? p.toFixed(2) : '')+'" /></div>';
+        '<label for="ck'+idx+'">'+escapeHtml(item.name)+'</label>' +
+        '<input class="ckqty" id="qt'+idx+'" inputmode="numeric" aria-label="Quantity" value="'+item.count+'" />' +
+        '<span class="x">×</span>' +
+        '<input class="ckprice" id="pr'+idx+'" inputmode="decimal" placeholder="R each" aria-label="Price each" value="'+(p != null ? p.toFixed(2) : '')+'" /></div>';
     }).join("");
     root.innerHTML =
       '<div class="modal-overlay" id="reviewOverlay"><div class="modal">' +
       '<h2>Review ingredients</h2>' +
-      '<p class="sub">Ticked items get added to your Basket list. Untick anything you already have in stock. Prices you enter are remembered for next time.</p>' +
+      '<p class="sub">Ticked items get added to your Basket list. Untick anything you already have in stock. Set how many and the price for one — the total works itself out. Prices are remembered for next time.</p>' +
       rows +
       '<div class="reviewtotal"><span>Total for ticked items</span><span id="reviewTotal">R0.00</span></div>' +
       '<div class="modal-actions">' +
@@ -940,7 +943,9 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
         var row = document.getElementById("row"+idx);
         if (row) row.classList.toggle("off", !(cb && cb.checked));
         var p = parsePrice(document.getElementById("pr"+idx).value);
-        if (cb && cb.checked && p != null) total += p;
+        var q = parseInt(document.getElementById("qt"+idx).value, 10);
+        if (isNaN(q) || q < 1) q = 1;
+        if (cb && cb.checked && p != null) total += p * q;
       });
       document.getElementById("reviewTotal").textContent = money(total);
     }
@@ -957,7 +962,9 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
         var raw = document.getElementById("pr"+idx).value.trim();
         var price = raw === "" ? null : parsePrice(raw);
         if (price != null) state.prices[item.name.trim().toLowerCase()] = price;
-        if (cb && cb.checked) addItem(item.name, null, "Meal plan", 1, price);
+        var qty = parseInt(document.getElementById("qt"+idx).value, 10);
+        if (isNaN(qty) || qty < 1) qty = 1;
+        if (cb && cb.checked) addItem(item.name, null, "Meal plan", qty, price);
       });
       wd.reviewed = true;
       save();
