@@ -360,19 +360,31 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
     try { localStorage.setItem("basket_cache_v2", JSON.stringify(state)); } catch(e){}
   }
   function setStatus(text){ var el = document.getElementById("syncStatus"); if (el) el.textContent = text; }
+  function flashStatus(t){ setStatus(t); setTimeout(function(){ setStatus(""); }, 1200); }
+
   /* ================= Google Sign-In + Drive persistence ================= */
+  var TOKEN_KEY = "basket_gtoken_v2";      // {token, exp} — survives closing the page
+  var ACCOUNT_KEY = "basket_account";      // {email} — remembers you've signed in on this device
+  var PENDING_KEY = "basket_pending_sync"; // 1 when local changes haven't reached Drive yet
   var tokenClient = null;
   var accessToken = null;
   var driveFileId = null;
   var saveTimer = null;
-  var GAPI_READY = false;
-  function loadScript(src){
-    return new Promise(function(resolve, reject){
-      var s = document.createElement("script");
-      s.src = src; s.onload = resolve; s.onerror = reject;
-      document.head.appendChild(s);
-    });
+
+  function lsGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
+  function knownAccount(){ return lsGet(ACCOUNT_KEY); }
+
+  function storeToken(token, expiresIn){
+    var secs = Number(expiresIn) || 3600;
+    lsSet(TOKEN_KEY, {token: token, exp: Date.now() + (secs - 60) * 1000});
   }
+  function loadValidToken(){
+    var t = lsGet(TOKEN_KEY);
+    return (t && t.token && t.exp > Date.now()) ? t.token : null;
+  }
+
   function initGis(){
     if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -381,40 +393,88 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       callback: function(resp){
         if (resp && resp.access_token){
           accessToken = resp.access_token;
-          try { sessionStorage.setItem("basket_gtoken", accessToken); } catch(e){}
+          storeToken(resp.access_token, resp.expires_in);
           onSignedIn();
+        } else {
+          setStatus("Sign-in cancelled");
         }
-      }
+      },
+      error_callback: function(){ renderSigninBanner(); }
     });
     return true;
   }
+
+  // Quiet sign-in: no forced consent screen, and no account picker once we know your email.
+  function requestToken(){
+    if (!tokenClient) return;
+    var acct = knownAccount();
+    var opts = {prompt: ""};
+    if (acct && acct.email) opts.login_hint = acct.email;
+    tokenClient.requestAccessToken(opts);
+  }
+
+  // When the hourly Google login runs out, reconnect on the first tap anywhere in the app.
+  var autoReconnectArmed = false;
+  function armAutoReconnect(){
+    if (autoReconnectArmed || accessToken || !knownAccount() || !tokenClient) return;
+    autoReconnectArmed = true;
+    document.addEventListener("click", function once(e){
+      document.removeEventListener("click", once, true);
+      autoReconnectArmed = false;
+      if (!accessToken && !(e.target.closest && e.target.closest("#signInBtn"))) requestToken();
+    }, true);
+  }
+
+  function tokenExpired(){
+    accessToken = null;
+    lsDel(TOKEN_KEY);
+    renderSigninBanner();
+    armAutoReconnect();
+  }
+
   function renderSigninBanner(){
     var el = document.getElementById("signinBanner");
+    var acct = knownAccount();
     if (accessToken){
-      el.innerHTML = '<div class="account"><span>✓ Synced to Google Drive</span>' +
+      el.innerHTML = '<div class="account"><span>✓ Synced to Google Drive' +
+        (acct && acct.email ? ' · ' + escapeHtml(acct.email) : '') + '</span>' +
         '<button id="signOutBtn">Sign out</button></div>';
       document.getElementById("signOutBtn").onclick = signOut;
-    } else {
-      el.innerHTML = '<div class="signin-banner"><span>Sign in to save your list to Google Drive — it won\'t be lost if this browser clears its data.</span>' +
-        '<button id="signInBtn">Sign in</button></div>';
-      document.getElementById("signInBtn").onclick = function(){
-        if (tokenClient) tokenClient.requestAccessToken({prompt: "consent"});
-      };
+      return;
     }
+    var msg = acct
+      ? "Drive connection timed out. Your changes are safe on this device and will sync when you reconnect."
+      : "Sign in to save your list to Google Drive — it won't be lost if this browser clears its data.";
+    el.innerHTML = '<div class="signin-banner"><span>' + msg + '</span>' +
+      '<button id="signInBtn">' + (acct ? "Reconnect" : "Sign in") + '</button></div>';
+    document.getElementById("signInBtn").onclick = requestToken;
   }
+
   function signOut(){
     if (accessToken && window.google && google.accounts && google.accounts.oauth2){
       google.accounts.oauth2.revoke(accessToken, function(){});
     }
     accessToken = null; driveFileId = null;
-    try { sessionStorage.removeItem("basket_gtoken"); } catch(e){}
+    lsDel(TOKEN_KEY); lsDel(ACCOUNT_KEY);
     renderSigninBanner();
   }
+
   function driveFetch(url, opts){
     opts = opts || {};
     opts.headers = Object.assign({Authorization: "Bearer " + accessToken}, opts.headers || {});
-    return fetch(url, opts);
+    return fetch(url, opts).then(function(r){
+      if (r.status === 401){ tokenExpired(); throw new Error("auth"); }
+      return r;
+    });
   }
+
+  function rememberAccountEmail(){
+    return driveFetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)")
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if (d && d.user && d.user.emailAddress) lsSet(ACCOUNT_KEY, {email: d.user.emailAddress}); })
+      .catch(function(){});
+  }
+
   function findOrCreateFile(){
     var q = "name='" + DRIVE_FILE_NAME + "' and trashed=false";
     if (DRIVE_FOLDER_ID) q += " and '" + DRIVE_FOLDER_ID + "' in parents";
@@ -450,14 +510,25 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       body: JSON.stringify(data)
     });
   }
+
   function onSignedIn(){
+    var reconnecting = !!knownAccount();   // signed in on this device before?
+    if (!reconnecting) lsSet(ACCOUNT_KEY, {email: ""});
     renderSigninBanner();
     setStatus("Connecting…");
+    rememberAccountEmail().then(renderSigninBanner);
     findOrCreateFile().then(function(id){
       driveFileId = id;
       return driveRead(id);
     }).then(function(remote){
+      if (!accessToken) return;
       var cached = cacheRead();
+      if (reconnecting && cached && lsGet(PENDING_KEY) === 1){
+        // Changes were made while disconnected: send them up instead of overwriting them.
+        state = cached; ready = true; renderAll();
+        pushToDrive();
+        return;
+      }
       if (remote){
         state = normalize(remote);
       } else if (cached){
@@ -466,30 +537,33 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
       ready = true;
       renderAll();
       cacheWrite();
-      setStatus("Saved");
-      setTimeout(function(){ setStatus(""); }, 1200);
+      lsDel(PENDING_KEY);
+      flashStatus("Saved");
     }).catch(function(){
-      setStatus("Couldn't connect");
+      setStatus(accessToken ? "Couldn't connect" : "");
     });
   }
+
+  function pushToDrive(){
+    if (!accessToken || !driveFileId) return;
+    setStatus("Saving…");
+    driveWrite(driveFileId, state).then(function(r){
+      if (r.ok){ lsDel(PENDING_KEY); flashStatus("Saved"); }
+      else setStatus("Couldn't save");
+    }).catch(function(){ setStatus(accessToken ? "Couldn't save" : "Saved on device"); });
+  }
+
   function save(){
+    lsSet(PENDING_KEY, 1);
     cacheWrite();
     if (!ready) return;
     renderAll();
     if (!accessToken || !driveFileId) return;
     clearTimeout(saveTimer);
     setStatus("Saving…");
-    saveTimer = setTimeout(function(){
-      driveWrite(driveFileId, state).then(function(r){
-        if (r.ok){
-          setStatus("Saved");
-          setTimeout(function(){ setStatus(""); }, 1200);
-        } else {
-          setStatus("Couldn't save");
-        }
-      }).catch(function(){ setStatus("Couldn't save"); });
-    }, 500);
+    saveTimer = setTimeout(pushToDrive, 500);
   }
+
   /* ---------------- App logic (list, favorites, recurring, recipes, meal plan) ---------------- */
   function renderAll(){
     renderList(); renderBudget(); renderFavorites(); renderRecurring(); renderWeek(); renderRecipeLib(); renderHistory();
@@ -827,27 +901,22 @@ footer{font-size:11px; color:var(--ink-dim); text-align:center; padding:10px 0 2
   /* ---------------- Boot ---------------- */
   function boot(){
     var cached = cacheRead();
-    if (cached){ state = cached; ready = true; renderAll(); } else { renderAll(); }
+    if (cached) state = cached;
+    ready = true;
+    renderAll();
+    accessToken = loadValidToken();   // reuse the saved login if it's still valid
     renderSigninBanner();
+    if (accessToken) onSignedIn();
     var gisPoll = setInterval(function(){
       if (initGis()){
         clearInterval(gisPoll);
-        var savedToken = null;
-        try { savedToken = sessionStorage.getItem("basket_gtoken"); } catch(e){}
-        if (savedToken){
-          accessToken = savedToken;
-          onSignedIn();
-        } else {
-          ready = true;
-        }
+        if (!accessToken) armAutoReconnect();
       }
     }, 150);
-    setTimeout(function(){ clearInterval(gisPoll); }, 8000);
+    setTimeout(function(){ clearInterval(gisPoll); }, 15000);
   }
   boot();
 })();
 </script>
 </body>
 </html>
-
-
